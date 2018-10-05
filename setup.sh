@@ -1,82 +1,184 @@
-# Initialize variables
-# Run 'doctl compute region list' for a list of available regions
-REGION=blr1
+#!/bin/bash
 
-# Download DigitalOcean CLI
-curl -OL https://github.com/digitalocean/doctl/releases/download/v1.6.0/doctl-1.6.0-darwin-10.6-amd64.tar.gz
-tar xf ./doctl-1.6.0-darwin-10.6-amd64.tar.gz
-sudo mv ~/doctl /usr/local/bin
+SSH_KEY_PATH=~/.ssh/id_rsa
+DO_KEY_ID=123456
+NODES=3
+NODE_REQUIREMENT=2 # in case of hiccups
 
-# Generate SSH Keys
-ssh-keygen -t rsa
+NETWORK='FLANNEL'
+# NETWORK='CALICO'
+# NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
-# Import SSH Keys
-doctl compute ssh-key import k8s-ssh --public-key-file ~/.ssh/id_rsa.pub
-SSH_ID=`doctl compute ssh-key list | grep "k8s-ssh" | cut -d' ' -f1`
-SSH_KEY=`doctl compute ssh-key get $SSH_ID --format FingerPrint --no-header`
+# Hard-code token due to errors with python script
+TOKEN="b8982b.68123f577c6a71d3"
+# TOKEN=$(python -c 'import random; print "%0x.%0x" % (random.SystemRandom().getrandbits(3*8), random.SystemRandom().getrandbits(8*8))')
 
-# Create Tags
-doctl compute tag create k8s-master
-doctl compute tag create k8s-node
+ssh-add $SSH_KEY_PATH
 
-# Generate token and insert into the script files
-TOKEN=`python -c 'import random; print "%0x.%0x" % (random.SystemRandom().getrandbits(3*8), random.SystemRandom().getrandbits(8*8))'`
-sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./master.sh
-sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./node.sh
+NODE_STRING=''
+for (( i = 1; i <= $NODES; i++ )); do
+	NODE_STRING="$NODE_STRING node$i"
+done
 
-# Create Master
-doctl compute droplet create master \
-	--region $REGION \
-	--image ubuntu-16-04-x64 \
-	--size 2gb \
-	--tag-name k8s-master \
-	--ssh-keys $SSH_KEY \
-	--user-data-file  ./master.sh \
-	--wait
+# ************* replacements *************
+sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./master.sh && sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./node.sh
+sed -i.bak "s/^NETWORK=.*/NETWORK=${NETWORK}/" ./master.sh
 
-# Retrieve IP address of Master
-MASTER_ID=`doctl compute droplet list | grep "master" |cut -d' ' -f1`
-MASTER_IP=`doctl compute droplet get $MASTER_ID --format PublicIPv4 --no-header`
+# ************* start *************
+doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,Status --user-data-file ./master.sh --wait
 
-# Download Kubectl
-curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/darwin/amd64/kubectl
-chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin/kubectl
-
-# Run this after a few minutes. Wait till Kubernetes Master is up and running
-scp root@$MASTER_IP:/etc/kubernetes/admin.conf .
-
-# Update Script with MASTER_IP
+MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
 sed -i.bak "s/^MASTER_IP=.*/MASTER_IP=${MASTER_IP}/" ./node.sh
 
-# Join Nodes
-doctl compute droplet create node1 node2 \
-	--region $REGION \
-	--image ubuntu-16-04-x64 \
-	--size 2gb \
-	--tag-name k8s-node \
-	--ssh-keys $SSH_KEY \
-	--user-data-file  ./node.sh \
-	--wait
+doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,Status --user-data-file ./node.sh --wait
 
-# Confirm the creation of Nodes
-kubectl --kubeconfig ./admin.conf get nodes
+rm ./master.sh.bak && rm ./node.sh.bak
 
-# Deploy an App
-kubectl --kubeconfig ./admin.conf create  -f todo-all-in-one.yaml
+# ***************************** WAIT UNITL COMPLETE *****************************
+echo "WAITING: Master is setting up ..."
+sleep 120
 
-# Get the NodePort
-NODEPORT=`kubectl --kubeconfig ./admin.conf get svc -o go-template='{{range .items}}{{range.spec.ports}}{{if .nodePort}}{{.nodePort}}{{"\n"}}{{end}}{{end}}{{end}}'`
+while true
+do
+	scp -o StrictHostKeyChecking=no root@$MASTER_IP:/etc/kubernetes/admin.conf ~/.kube/config
+	if [ "$?" -eq "0" ]; then
+		echo "Master setup complete!"
+  		break
+	fi
+	sleep 2
+done
 
-# Create a Load Balancer
-doctl compute load-balancer create \
-	--name k8slb \
-	--tag-name k8s-node \
-	--region $REGION \
-	--health-check protocol:http,port:$NODEPORT,path:/,check_interval_seconds:10,response_timeout_seconds:5,healthy_threshold:5,unhealthy_threshold:3 \
-	--forwarding-rules entry_protocol:TCP,entry_port:80,target_protocol:TCP,target_port:$NODEPORT
+echo "WAITING: Nodes are setting up ..."
+while true
+do
+	NUM=$(kubectl get nodes | grep "node" |  grep -c " Ready ")
+	if [ "$NUM" -ge "$NODE_REQUIREMENT" ]; then
+		echo "Node setup complete!"
+  		break
+	fi
+	sleep 2
+done
 
-# Open the Web App in Browser
-LB_ID=`doctl compute load-balancer list | grep "k8slb" | cut -d' ' -f1`
-LB_IP=`doctl compute load-balancer get $LB_ID | awk '{ print $2; }' | tail -n +2`
-open http://$LB_IP
+# ***************************** COMPLETE *****************************
+echo "*************** Cluster setup complete ***************"
+
+KERNEL=$(uname)
+if [ "$KERNEL" == "Darwin" ]; then
+	say "Cluster setup complete" -v Samantha
+	osascript -e 'display notification "Cluster setup complete"'
+fi
+
+# ***************************** DEPLOY *****************************
+# kubectl run hello-web --image=chrismessiah/hello-nodejs --port 3000
+# kubectl scale deployment hello-web --replicas=2
+
+kubectl run hello-web --image=chrismessiah/hello-nodejs --port 3000 --labels='app=hello-web' --replicas=3
+kubectl create -f ./demos/baseline/deployment.yaml -f ./demos/baseline/service.yaml
+kubectl create -f ./user.yaml -f ./rbac.yaml
+
+watch -n 2 kubectl get pods -o wide
+
+exit 1
+
+	# get ip of nodes
+	doctl compute droplet list
+
+	# confirm setup (run on master)
+	kubectl get no # nodes
+
+	# additional commands to play with to check the cluster (run on master)
+	kubectl get pods
+	kubectl get svc # services
+	kubectl get cs # componentstatuses
+	kubectl cluster-info
+	kubectl logs my-pod
+
+	kubectl get nodes
+	kubectl create -f foo.yaml # deploy an app
+	kubectl proxy # open tunnel from local machine to master, allows access to dashboard http://localhost:8001/ui/
+
+	kubectl exec -it PODNAME /bin/bash # access bash inside a pod
+
+	# kubectl run -it busybox --image=busybox # busybox is an image with multiple unix tools
+
+	# create a pod which sends requests to another pod on another node
+	# Flannel: 10.244.1.42
+	# Calico: 192.168.104.1
+	kubectl create -f ./demos/baseline/request.yaml
+
+	kubectl get pods -o wide
+	kubectl get pods --all-namespaces
+
+	kubectl edit deployment/DEPLOYMENT
+	kubectl rollout status deployment/DEPLOYMENT
+
+	kubectl label node NODE LABEL=VALUE # add label to node
+	kubectl label node NODE LABEL- # remove label from node
+
+	# force reschedule
+	kubectl drain NODE
+	kubectl cordon NODE
+	kubectl uncordon NODE
+
+	# push to new namespace
+	kubectl create namespace NAMESPACE
+	kubectl config current-context
+	kubectl config view -o json | jq .contexts[] # get contexts in local config, use this below
+	kubectl config set-context dev --namespace=new-namespace --cluster=kubernetes --user=kubernetes-admin
+	kubectl config use-context dev
+	kubectl config delete-context dev
+
+	kubectl scale deployment DEPLOYMENT --replicas=4 # scale up deployment
+
+	kubectl taint nodes NODE KEY=VALUE:NoExecute # add
+	kubectl taint nodes NODE KEY:NoExecute- # remove
+
+	kubectl apply -f https://docs.projectcalico.org/master/getting-started/kubernetes/installation/hosted/calicoctl.yaml
+	kubectl apply -f https://docs.projectcalico.org/master/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calicoctl.yaml
+	kubectl exec -ti -n kube-system calicoctl -- /calicoctl get profiles -o json
+
+	# prepare for http requests
+
+	SECRET=$(kubectl get sa admin-user -o json --namespace=kube-system | jq -r .secrets[].name)
+	TOKEN=$(kubectl get secret $SECRET -o json --namespace=kube-system | jq -r '.data["token"]' | base64 -D)
+	kubectl get secret $SECRET -o json --namespace=kube-system | jq -r '.data["ca.crt"]' | base64 -D > ca.crt
+
+	APISERVER_URL=$(kubectl config view | grep server | cut -f 2- -d ":" | tr -d " ")
+	curl -s --header "Authorization: Bearer $TOKEN" --cacert ./ca.crt $APISERVER_URL/api
+	curl -s --header "Authorization: Bearer $TOKEN" --cacert ./ca.crt $APISERVER_URL/api/v1/pods
+	curl -s --header "Authorization: Bearer $TOKEN" --cacert ./ca.crt $APISERVER_URL/api/v1/namespaces/default/pods
+	curl -s --header "Authorization: Bearer $TOKEN" --cacert ./ca.crt $APISERVER_URL/api/v1/namespaces/default/pods | jq -r ".items[] | {podStatus: .status.phase, podName: .metadata.name, podIP: .status.podIP, nodeName: .spec.nodeName, hostIP: .status.hostIP}"
+
+	kubectl run my-shell --rm -i --tty --image ubuntu -- bash
+	apt-get update && apt-get install -y curl
+
+	# use tshark to filter away own ip and only UDP (due to VXLAN)
+	apt install -y tshark iftop
+
+	# capture filters
+	tshark -f 'not host 77.218.255.217'
+	tshark -f '(not host 206.189.28.133) and (not host 77.218.255.222)'
+	tshark -f '(not host 206.189.28.133) and (not host 77.218.255.221) and (not host 213.86.144.41) and (not host 206.189.12.73)'
+	tshark -f 'udp'
+	tshark -f 'port 290'
+	tshark -f 'not tcp'
+
+	# display filters
+	tshark -Y http
+
+	# interface
+	tshark -i flannel.1
+
+	# total
+	tshark -i flannel.1 -Y http
+	tshark -i cali041b8026940 -Y http
+	tshark -i calif48e9637a36 -Y http
+
+	curl http://10.244.2.2:3000
+
+	# done. cleanup.
+	doctl compute droplet list --format "Name,PublicIPv4"
+	doctl compute droplet delete -f master node1 node2 node3
+	doctl compute droplet delete -f master node1 node2
+	doctl compute droplet delete -f node3 node4
+	rm ~/.kube/config

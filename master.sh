@@ -1,10 +1,14 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
-# Replace this with the token 
-TOKEN=xxxxxx.yyyyyyyyyyyyyyyy
+# ************* vars *************
+TOKEN=XXXX
+NETWORK=XXXX
 
-apt-get update && apt-get upgrade -y 
+# ************* init *************
+MASTER_IP=`ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
+
+apt-get update && apt-get upgrade -y
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
@@ -12,21 +16,38 @@ cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-apt-get update -y
+apt-get update -y && apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
 
-apt-get install -y docker.io
-apt-get install -y --allow-unauthenticated kubelet kubeadm kubectl kubernetes-cni
 
-export MASTER_IP=$(curl -s http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address)
-kubeadm init --pod-network-cidr=10.244.0.0/16  --apiserver-advertise-address $MASTER_IP --token $TOKEN
+# ************* master specific *************
+if [ "$NETWORK" == "CALICO" ]
+then
+  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=192.168.0.0/16
+elif [ "$NETWORK" == "FLANNEL" ]
+then
+  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=10.244.0.0/16
+elif [ "$NETWORK" == "CANAL" ]
+then
+  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=10.244.0.0/16
+fi
 
-cp /etc/kubernetes/admin.conf $HOME/
-chown $(id -u):$(id -g) $HOME/admin.conf
-export KUBECONFIG=$HOME/admin.conf
 
-kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml --namespace=kube-system
-kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
-kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --namespace=kube-system
+mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-# Install DigitalOcean monitoring agent
-curl -sSL https://agent.digitalocean.com/install.sh | sh
+if [ "$NETWORK" == "CALICO" ]
+then
+  kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml
+elif [ "$NETWORK" == "FLANNEL" ]
+then
+  kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
+elif [ "$NETWORK" == "CANAL" ]
+then
+  kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/rbac.yaml
+  kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+fi
+
+# ************* bonus stuff specific *************
+apt install -y python
+
+# install dashboard to visualize cluster
+# kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml --namespace=kube-system
