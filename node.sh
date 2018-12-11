@@ -14,7 +14,9 @@ cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
-apt-get update -y && apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
+curl https://get.docker.com/ >> install-docker.sh && chmod +x install-docker.sh && ./install-docker.sh
+
+apt-get update -y && apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 # ************* node-specific *************
 kubeadm join --token $TOKEN $MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification

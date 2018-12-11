@@ -38,6 +38,8 @@ rm ./master.sh.bak && rm ./node.sh.bak
 echo "WAITING: Master is setting up ..."
 sleep 120
 
+mkdir ~/.kube
+
 while true
 do
 	scp -o StrictHostKeyChecking=no root@$MASTER_IP:/etc/kubernetes/admin.conf ~/.kube/config
