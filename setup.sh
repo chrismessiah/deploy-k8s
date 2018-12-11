@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SSH_KEY_PATH=~/.ssh/id_rsa
+# SSH_KEY_PATH=~/.ssh/id_rsa
 DO_KEY_ID=23696360
 NODES=3
 NODE_REQUIREMENT=2 # in case of hiccups
@@ -13,7 +13,7 @@ NETWORK='FLANNEL'
 TOKEN="b8982b.68123f577c6a71d3"
 # TOKEN=$(python -c 'import random; print "%0x.%0x" % (random.SystemRandom().getrandbits(3*8), random.SystemRandom().getrandbits(8*8))')
 
-ssh-add $SSH_KEY_PATH
+# ssh-add $SSH_KEY_PATH
 
 NODE_STRING=''
 for (( i = 1; i <= $NODES; i++ )); do
