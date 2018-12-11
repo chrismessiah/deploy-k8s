@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SSH_KEY_PATH=~/.ssh/id_rsa
-DO_KEY_ID=123456
+DO_KEY_ID=23696360
 NODES=3
 NODE_REQUIREMENT=2 # in case of hiccups
 
