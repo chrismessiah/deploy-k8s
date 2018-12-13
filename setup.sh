@@ -25,12 +25,12 @@ sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./master.sh && sed -i.bak "s/^TOKEN=.*/
 sed -i.bak "s/^NETWORK=.*/NETWORK=${NETWORK}/" ./master.sh
 
 # ************* start *************
-doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,Status --enable-private-networking --user-data-file ./master.sh --wait
+doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./master.sh --wait
 
 MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
 sed -i.bak "s/^MASTER_IP=.*/MASTER_IP=${MASTER_IP}/" ./node.sh
 
-doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,Status --enable-private-networking --user-data-file ./node.sh --wait
+doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./node.sh --wait
 
 rm ./master.sh.bak && rm ./node.sh.bak
 
