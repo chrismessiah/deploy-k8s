@@ -8,7 +8,6 @@ NETWORK=XXXX
 # ************* init *************
 MASTER_IP=`ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
 
-apt-get update && apt-get upgrade -y
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
@@ -18,7 +17,8 @@ EOF
 
 curl https://get.docker.com/ >> install-docker.sh && chmod +x install-docker.sh && ./install-docker.sh
 
-apt-get update -y && apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+apt-get update
+apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 
 # ************* master specific *************

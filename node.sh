@@ -6,8 +6,6 @@ TOKEN=XXXXX
 MASTER_IP=XXXXX
 
 # ************* init *************
-apt-get update && apt-get upgrade -y
-
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
@@ -16,7 +14,8 @@ EOF
 
 curl https://get.docker.com/ >> install-docker.sh && chmod +x install-docker.sh && ./install-docker.sh
 
-apt-get update -y && apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+apt-get update
+apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 # ************* node-specific *************
 kubeadm join --token $TOKEN $MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification
