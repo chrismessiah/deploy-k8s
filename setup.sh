@@ -1,7 +1,7 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
-DO_KEY_ID=23696360 # Use "doctl compute ssh-key list" to get this
+DO_KEYS="23696360,24225182" # Use "doctl compute ssh-key list" to get this
 NODES=2
 NODE_REQUIREMENT=2 # in case of hiccups, should be equal or lower than $NODES
 
@@ -21,7 +21,7 @@ sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delet
 
 # ************* start *************
 echo "-> creating master VM and initalizing with master.sh"
-doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file master.sh --wait
+doctl compute droplet create master --ssh-keys $DO_KEYS --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file master.sh --wait
 
 echo "-> get master's IP and replace in node.sh"
 PUBLIC_MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
@@ -30,7 +30,7 @@ sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" mast
 sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" node.sh
 
 echo "-> creating worker node VMs and initalizing with node.sh"
-doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file node.sh --wait
+doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEYS --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file node.sh --wait
 
 # ***************************** WAIT UNITL COMPLETE *****************************
 SLEEP_SECS=60
