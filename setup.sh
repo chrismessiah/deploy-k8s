@@ -1,4 +1,5 @@
 #!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
 
 DO_KEY_ID=23696360 # Use "doctl compute ssh-key list" to get this
 NODES=2
@@ -19,25 +20,28 @@ NODE_STRING="node1" && for (( i = 2; i <= $NODES; i++ )); do NODE_STRING="$NODE_
 sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
 
 # ************* start *************
-# create master using master.sh
-doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./master.sh --wait
+echo "-> creating master VM and initalizing with master.sh"
+doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file master.sh --wait
 
-# get master's IP and replace in node.sh
-MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
-sed -i "" "s/^MASTER_IP=.*/MASTER_IP=${MASTER_IP}/" node.sh
+echo "-> get master's IP and replace in node.sh"
+PUBLIC_MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
+PRIVATE_MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PrivateIPv4 --no-header)
+sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" master.sh
+sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" node.sh
 
-# create worker nodes using node.sh
-doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./node.sh --wait
+echo "-> creating worker node VMs and initalizing with node.sh"
+doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file node.sh --wait
 
 # ***************************** WAIT UNITL COMPLETE *****************************
-echo "WAITING: Master is setting up ..."
-sleep 60
+SLEEP_SECS=60
+echo "-> waiting $SLEEP_SECS seconds for master to finish setup ..."
+sleep $SLEEP_SECS
 
 mkdir ~/.kube
 
 while true
 do
-	scp -o StrictHostKeyChecking=no root@$MASTER_IP:/etc/kubernetes/admin.conf ~/.kube/config
+	scp -o StrictHostKeyChecking=no root@$PUBLIC_MASTER_IP:/etc/kubernetes/admin.conf ~/.kube/config
 	if [ "$?" -eq "0" ]; then
 		echo "Master setup complete!"
   		break

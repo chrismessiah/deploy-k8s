@@ -2,8 +2,8 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # ************* vars *************
-TOKEN=XXXXX
-MASTER_IP=XXXXX
+TOKEN=b8982b.68123f577c6a71d3
+PRIVATE_MASTER_IP=10.131.88.60
 
 # ************* init *************
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -18,7 +18,7 @@ apt-get update
 apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 # ************* node-specific *************
-kubeadm join --token $TOKEN $MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification
+kubeadm join --token $TOKEN $PRIVATE_MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification
 
 # ************* bonus stuff specific *************
 apt install -y python

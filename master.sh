@@ -2,11 +2,11 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # ************* vars *************
-TOKEN=XXXX
-NETWORK=XXXX
+TOKEN=b8982b.68123f577c6a71d3
+NETWORK=CALICO
+PRIVATE_MASTER_IP=10.131.88.60
 
 # ************* init *************
-MASTER_IP=`ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'`
 
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -22,17 +22,19 @@ apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 
 # ************* master specific *************
+
+# DEBUG THIS: somehow the code stops here ...
+
 if [ "$NETWORK" == "CALICO" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=192.168.0.0/16
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PRIVATE_MASTER_IP --pod-network-cidr=192.168.0.0/16
 elif [ "$NETWORK" == "FLANNEL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=10.244.0.0/16
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PRIVATE_MASTER_IP --pod-network-cidr=10.244.0.0/16
 elif [ "$NETWORK" == "CANAL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $MASTER_IP --pod-network-cidr=10.244.0.0/16
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PRIVATE_MASTER_IP --pod-network-cidr=10.244.0.0/16
 fi
-
 
 mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
