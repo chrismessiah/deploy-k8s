@@ -1,38 +1,33 @@
 #!/bin/bash
 
-# SSH_KEY_PATH=~/.ssh/id_rsa
-DO_KEY_ID=23696360
+DO_KEY_ID=23696360 # Use "doctl compute ssh-key list" to get this
 NODES=2
-NODE_REQUIREMENT=2 # in case of hiccups
+NODE_REQUIREMENT=2 # in case of hiccups, should be equal or lower than $NODES
 
 # NETWORK='FLANNEL'
 NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
-# Hard-code token due to errors with python script
+# Hard-code token, generate this for production K8
 TOKEN="b8982b.68123f577c6a71d3"
-# TOKEN=$(python -c 'import random; print "%0x.%0x" % (random.SystemRandom().getrandbits(3*8), random.SystemRandom().getrandbits(8*8))')
-
-# ssh-add $SSH_KEY_PATH
-
-NODE_STRING=''
-for (( i = 1; i <= $NODES; i++ )); do
-	NODE_STRING="$NODE_STRING node$i"
-done
 
 # ************* replacements *************
-sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./master.sh && sed -i.bak "s/^TOKEN=.*/TOKEN=${TOKEN}/" ./node.sh
-sed -i.bak "s/^NETWORK=.*/NETWORK=${NETWORK}/" ./master.sh
+sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" master.sh
+sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" node.sh
+sed -i "" "s/^NETWORK=.*/NETWORK=${NETWORK}/" master.sh
+NODE_STRING="node1" && for (( i = 2; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
+sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
 
 # ************* start *************
+# create master using master.sh
 doctl compute droplet create master --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./master.sh --wait
 
+# get master's IP and replace in node.sh
 MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
-sed -i.bak "s/^MASTER_IP=.*/MASTER_IP=${MASTER_IP}/" ./node.sh
+sed -i "" "s/^MASTER_IP=.*/MASTER_IP=${MASTER_IP}/" node.sh
 
+# create worker nodes using node.sh
 doctl compute droplet create $NODE_STRING --ssh-keys $DO_KEY_ID --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file ./node.sh --wait
-
-rm ./master.sh.bak && rm ./node.sh.bak
 
 # ***************************** WAIT UNITL COMPLETE *****************************
 echo "WAITING: Master is setting up ..."
@@ -177,10 +172,3 @@ exit 1
 	tshark -i calif48e9637a36 -Y http
 
 	curl http://10.244.2.2:3000
-
-	# done. cleanup.
-	doctl compute droplet list --format "Name,PublicIPv4"
-	doctl compute droplet delete -f master node1 node2 node3
-	doctl compute droplet delete -f master node1 node2
-	doctl compute droplet delete -f node3 node4
-	rm ~/.kube/config
