@@ -1,9 +1,12 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
-DO_KEYS="23696360,24225182" # Use "doctl compute ssh-key list" to get this
 NODES=2
 NODE_REQUIREMENT=2 # in case of hiccups, should be equal or lower than $NODES
+
+# Use "doctl compute ssh-key list" to get this
+# DO_KEYS="23696360"
+DO_KEYS="24225182,24202611"
 
 # NETWORK='FLANNEL'
 NETWORK='CALICO'
@@ -23,10 +26,8 @@ sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delet
 echo "-> creating master VM and initalizing with master.sh"
 doctl compute droplet create master --ssh-keys $DO_KEYS --region lon1 --image ubuntu-18-04-x64 --size s-2vcpu-2gb  --format ID,Name,PublicIPv4,PrivateIPv4,Status --enable-private-networking --user-data-file master.sh --wait
 
-echo "-> get master's IP and replace in node.sh"
-PUBLIC_MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PublicIPv4 --no-header)
+echo "-> get master's private IP and replace in node.sh"
 PRIVATE_MASTER_IP=$(doctl compute droplet get $(doctl compute droplet list | grep "master" | cut -d' ' -f1) --format PrivateIPv4 --no-header)
-sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" master.sh
 sed -i "" "s/^PRIVATE_MASTER_IP=.*/PRIVATE_MASTER_IP=${PRIVATE_MASTER_IP}/" node.sh
 
 echo "-> creating worker node VMs and initalizing with node.sh"
@@ -43,8 +44,7 @@ while true
 do
 	scp -o StrictHostKeyChecking=no root@$PUBLIC_MASTER_IP:/etc/kubernetes/admin.conf ~/.kube/config
 	if [ "$?" -eq "0" ]; then
-		echo "Master setup complete!"
-  		break
+		echo "Master setup complete!" && break
 	fi
 	sleep 2
 done
