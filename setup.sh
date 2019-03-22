@@ -2,11 +2,11 @@
 
 # SSH_KEY_PATH=~/.ssh/id_rsa
 DO_KEY_ID=23696360
-NODES=3
+NODES=2
 NODE_REQUIREMENT=2 # in case of hiccups
 
-NETWORK='FLANNEL'
-# NETWORK='CALICO'
+# NETWORK='FLANNEL'
+NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
 # Hard-code token due to errors with python script
@@ -36,7 +36,7 @@ rm ./master.sh.bak && rm ./node.sh.bak
 
 # ***************************** WAIT UNITL COMPLETE *****************************
 echo "WAITING: Master is setting up ..."
-sleep 120
+sleep 60
 
 mkdir ~/.kube
 
