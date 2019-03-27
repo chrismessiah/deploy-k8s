@@ -2,11 +2,8 @@
 
 ## Prerequisites
 
-```sh
-curl https://raw.githubusercontent.com/helm/helm/master/scripts/get > get_helm.sh
-chmod 700 get_helm.sh
-./get_helm.sh
-```
+* [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+* [Helm](https://helm.sh/docs/using_helm/#installing-helm)
 
 ## Helpful commands
 
