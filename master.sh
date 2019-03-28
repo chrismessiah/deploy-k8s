@@ -2,6 +2,7 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # ************* vars *************
+CONTAINER_RUNTIME=CRI-O
 TOKEN=b8982b.68123f577c6a71d3
 NETWORK=CALICO
 # ************* init *************
@@ -9,35 +10,75 @@ NETWORK=CALICO
 PUBLIC_MASTER_IP=`ifconfig eth0 | grep 'inet ' | cut -d: -f2 | awk '{print $2}'`
 PRIVATE_MASTER_IP=`ifconfig eth1 | grep 'inet ' | cut -d: -f2 | awk '{print $2}'`
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+# ************ Install container runtime ************
+if [ "$CONTAINER_RUNTIME" == "DOCKER" ]
+then
+  CRI_SOCKET="/var/run/docker.sock"
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+  add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) \
+    stable"
+  apt-get update
+  apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu
+  cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
 
+  mkdir -p /etc/systemd/system/docker.service.d
+
+  systemctl daemon-reload
+  systemctl restart docker
+
+elif [ "$CONTAINER_RUNTIME" == "CRI-O" ]
+then
+  CRI_SOCKET="/var/run/crio/crio.sock"
+  modprobe overlay
+  modprobe br_netfilter
+  cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
+net.bridge.bridge-nf-call-iptables  = 1
+net.ipv4.ip_forward                 = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+  sysctl --system
+  add-apt-repository -y ppa:projectatomic/ppa
+  apt-get install -y cri-o-1.13
+  systemctl start crio
+fi
+
+# ************ Install K8 ************
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
-
-curl https://get.docker.com/ >> install-docker.sh
-chmod +x install-docker.sh
-./install-docker.sh
 
 apt-get update
 apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 
 # ************* master specific *************
-sed "s/ExecStart=\/usr\/bin\/kubelet.*/& --node-ip=$PRIVATE_MASTER_IP/" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i "s/ExecStart=\/usr\/bin\/kubelet.*/& --node-ip=$PRIVATE_MASTER_IP/" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 systemctl daemon-reload
 systemctl restart kubelet
 
 if [ "$NETWORK" == "CALICO" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 --cri-socket=$CRI_SOCKET >> kubeadm.log
 elif [ "$NETWORK" == "FLANNEL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET >> kubeadm.log
 elif [ "$NETWORK" == "CANAL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET >> kubeadm.log
 fi
 
 mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config

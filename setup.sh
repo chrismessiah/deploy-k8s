@@ -12,6 +12,9 @@ DO_KEYS="24225182,24202611"
 NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
+# CONTAINER_RUNTIME="DOCKER"
+CONTAINER_RUNTIME="CRI-O"
+
 # Hard-code token, generate this for production K8
 TOKEN="b8982b.68123f577c6a71d3"
 
@@ -19,6 +22,8 @@ TOKEN="b8982b.68123f577c6a71d3"
 sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" master.sh
 sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" node.sh
 sed -i "" "s/^NETWORK=.*/NETWORK=${NETWORK}/" master.sh
+sed -i "" "s/^CONTAINER_RUNTIME=.*/CONTAINER_RUNTIME=${CONTAINER_RUNTIME}/" master.sh
+sed -i "" "s/^CONTAINER_RUNTIME=.*/CONTAINER_RUNTIME=${CONTAINER_RUNTIME}/" node.sh
 NODE_STRING="node1" && for (( i = 2; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
 sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
 
