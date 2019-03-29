@@ -65,7 +65,7 @@ apt-get install -y kubelet kubeadm kubectl kubernetes-cni
 
 
 # ************* master specific *************
-sed -i "s/ExecStart=\/usr\/bin\/kubelet.*/& --node-ip=$PRIVATE_MASTER_IP --authorization-mode=RBAC/" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i "s/ExecStart=\/usr\/bin\/kubelet.*/& --node-ip=$PRIVATE_MASTER_IP/" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 systemctl daemon-reload
 systemctl restart kubelet
