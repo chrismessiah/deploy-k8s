@@ -15,15 +15,24 @@ NETWORK='CALICO'
 # CONTAINER_RUNTIME="DOCKER"
 CONTAINER_RUNTIME="CRI-O"
 
+# Must be MAJOR.MINOR.PATCH
+KUBERNETES_VERSION="1.13.5"
+
 # Hard-code token, generate this for production K8
 TOKEN="b8982b.68123f577c6a71d3"
 
 # ************* replacements *************
 sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" master.sh
 sed -i "" "s/^TOKEN=.*/TOKEN=${TOKEN}/" node.sh
+
 sed -i "" "s/^NETWORK=.*/NETWORK=${NETWORK}/" master.sh
+
 sed -i "" "s/^CONTAINER_RUNTIME=.*/CONTAINER_RUNTIME=${CONTAINER_RUNTIME}/" master.sh
 sed -i "" "s/^CONTAINER_RUNTIME=.*/CONTAINER_RUNTIME=${CONTAINER_RUNTIME}/" node.sh
+
+sed -i "" "s/^KUBERNETES_VERSION=.*/KUBERNETES_VERSION=${KUBERNETES_VERSION}/" master.sh
+sed -i "" "s/^KUBERNETES_VERSION=.*/KUBERNETES_VERSION=${KUBERNETES_VERSION}/" node.sh
+
 NODE_STRING="node1" && for (( i = 2; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
 sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
 

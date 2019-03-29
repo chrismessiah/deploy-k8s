@@ -3,8 +3,9 @@ export DEBIAN_FRONTEND=noninteractive
 
 # ************* vars *************
 CONTAINER_RUNTIME=CRI-O
+KUBERNETES_VERSION=1.13
 TOKEN=b8982b.68123f577c6a71d3
-PRIVATE_MASTER_IP=10.131.108.110
+PRIVATE_MASTER_IP=10.131.106.226
 
 # ************ Install container runtime ************
 if [ "$CONTAINER_RUNTIME" == "DOCKER" ]
@@ -43,7 +44,8 @@ EOF
 
   sysctl --system
   add-apt-repository -y ppa:projectatomic/ppa
-  apt-get install -y cri-o-1.13
+  CRIO_VERSION=`echo $KUBERNETES_VERSION | cut -f1-2 -d"."`
+  apt-get install -y cri-o-$CRIO_VERSION
   systemctl start crio
 fi
 
@@ -54,7 +56,12 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 apt-get update
-apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+
+KUBELET_VERSION=`apt-cache madison kubelet | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+KUBEADM_VERSION=`apt-cache madison kubeadm | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+KUBECTL_VERSION=`apt-cache madison kubectl | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+apt-get install -y kubelet=$KUBELET_VERSION kubeadm=$KUBEADM_VERSION kubectl=$KUBECTL_VERSION kubernetes-cni
+
 
 # ************* node-specific *************
 kubeadm join --token $TOKEN $PRIVATE_MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification

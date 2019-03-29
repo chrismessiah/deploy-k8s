@@ -3,6 +3,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # ************* vars *************
 CONTAINER_RUNTIME=CRI-O
+KUBERNETES_VERSION=1.13.5
 TOKEN=b8982b.68123f577c6a71d3
 NETWORK=CALICO
 # ************* init *************
@@ -50,7 +51,8 @@ EOF
 
   sysctl --system
   add-apt-repository -y ppa:projectatomic/ppa
-  apt-get install -y cri-o-1.13
+  CRIO_VERSION=`echo $KUBERNETES_VERSION | cut -f1-2 -d"."`
+  apt-get install -y cri-o-$CRIO_VERSION
   systemctl start crio
 fi
 
@@ -61,7 +63,11 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 EOF
 
 apt-get update
-apt-get install -y kubelet kubeadm kubectl kubernetes-cni
+
+KUBELET_VERSION=`apt-cache madison kubelet | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+KUBEADM_VERSION=`apt-cache madison kubeadm | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+KUBECTL_VERSION=`apt-cache madison kubectl | grep $KUBERNETES_VERSION | head -n 1 | cut -d: -f1 | awk '{print $3}'`
+apt-get install -y kubelet=$KUBELET_VERSION kubeadm=$KUBEADM_VERSION kubectl=$KUBECTL_VERSION kubernetes-cni
 
 
 # ************* master specific *************
@@ -72,13 +78,13 @@ systemctl restart kubelet
 
 if [ "$NETWORK" == "CALICO" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 --cri-socket=$CRI_SOCKET >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 --cri-socket=$CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 elif [ "$NETWORK" == "FLANNEL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 elif [ "$NETWORK" == "CANAL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 fi
 
 mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
