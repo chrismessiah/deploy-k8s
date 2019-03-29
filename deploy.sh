@@ -3,7 +3,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # install Kubernetes dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
-kubectl apply -f k8-dashboard/User.yaml -f k8-dashboard/ClusterRoleBinding.yaml
+kubectl apply -f k8-dashboard/ServiceAccount.yaml -f k8-dashboard/ClusterRoleBinding.yaml
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 
 # run sample app and create a ClusterIP service

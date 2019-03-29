@@ -81,13 +81,18 @@ then
   kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  --cri-socket=$CRI_SOCKET >> kubeadm.log
 fi
 
-mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
+# To allow execution for non-root users
+# mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# To allow execution for root users only
+export KUBECONFIG=/etc/kubernetes/admin.conf
 
 if [ "$NETWORK" == "CALICO" ]
 then
   IP_AUTODETECTION_METHOD=interface=eth1
   IP6_AUTODETECTION_METHOD=interface=eth1
   kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+  kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
 elif [ "$NETWORK" == "FLANNEL" ]
 then
   kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
