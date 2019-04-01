@@ -14,7 +14,7 @@ PRIVATE_MASTER_IP=`ifconfig eth1 | grep 'inet ' | cut -d: -f2 | awk '{print $2}'
 # ************ Install container runtime ************
 if [ "$CONTAINER_RUNTIME" == "DOCKER" ]
 then
-  CRI_SOCKET="/var/run/docker.sock"
+  CRI_SOCKET=''
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
   add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -22,25 +22,13 @@ then
     stable"
   apt-get update
   apt-get install -y docker-ce=18.06.2~ce~3-0~ubuntu
-  cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
-
-  mkdir -p /etc/systemd/system/docker.service.d
 
   systemctl daemon-reload
   systemctl restart docker
 
 elif [ "$CONTAINER_RUNTIME" == "CRI-O" ]
 then
-  CRI_SOCKET="/var/run/crio/crio.sock"
+  CRI_SOCKET='--cri-socket=/var/run/crio/crio.sock'
   modprobe overlay
   modprobe br_netfilter
   cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
@@ -71,7 +59,7 @@ apt-get install -y kubelet=$KUBELET_VERSION kubeadm=$KUBEADM_VERSION kubectl=$KU
 
 
 # ************* master specific *************
-sed -i "s/ExecStart=\/usr\/bin\/kubelet.*/& --node-ip=$PRIVATE_MASTER_IP/" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip=$PRIVATE_MASTER_IP~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 systemctl daemon-reload
 systemctl restart kubelet
