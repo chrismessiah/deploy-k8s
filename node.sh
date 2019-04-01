@@ -10,6 +10,7 @@ PRIVATE_MASTER_IP=10.131.106.226
 # ************ Install container runtime ************
 if [ "$CONTAINER_RUNTIME" == "DOCKER" ]
 then
+  CRI_SOCKET=''
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
   add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -22,6 +23,7 @@ then
   systemctl restart docker
 elif [ "$CONTAINER_RUNTIME" == "CRI-O" ]
 then
+  CRI_SOCKET='--cri-socket=/var/run/crio/crio.sock'
   modprobe overlay
   modprobe br_netfilter
   cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
@@ -52,7 +54,7 @@ apt-get install -y kubelet=$KUBELET_VERSION kubeadm=$KUBEADM_VERSION kubectl=$KU
 
 
 # ************* node-specific *************
-kubeadm join --token $TOKEN $PRIVATE_MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification
+kubeadm join --token $TOKEN $PRIVATE_MASTER_IP:6443 --discovery-token-unsafe-skip-ca-verification $CRI_SOCKET
 
 # ************* bonus stuff specific *************
 apt install -y python
