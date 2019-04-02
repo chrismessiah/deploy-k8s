@@ -1,0 +1,5 @@
+ID           Name     Public IPv4       Private IPv4     Status
+138596946    node1    104.248.164.48    10.131.92.223    active
+138596947    node2    104.248.164.79    10.131.93.74     active
+ID           Name      Public IPv4        Private IPv4     Status
+138597120    master    206.189.115.245    10.131.94.122    active
