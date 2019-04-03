@@ -3,7 +3,11 @@
   gather_facts: false
   tasks:
     - name: initialize the cluster
-      shell: "kubeadm init --apiserver-advertise-address {{ master_public_ip }} --pod-network-cidr={{ cidr }} --kubernetes-version={{ k8_version }} >> kubeadm-init.log"
+      shell: |
+        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
+                     --pod-network-cidr={{ cidr }} \
+                     --kubernetes-version={{ k8_version }} >> kubeadm-init.log
+      register: kubeadm_init
       args:
         chdir: $HOME
         creates: kubeadm-init.log
@@ -14,13 +18,38 @@
         state: directory
         mode: 0755
 
+    - name: copy admin.conf to user's kube config
+      when: kubeadm_init is succeeded
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+
     - name: get join command
+      when: kubeadm_init is succeeded
       shell: "kubeadm token create --print-join-command"
       register: join_command_raw
 
     - name: set join command
       set_fact:
         join_command: "{{ join_command_raw.stdout_lines[0] }}"
+
+    - name: Deploy Flannel
+      when: network == "Flannel" and kubeadm_init is succeeded
+      shell: kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
+
+    - name: Deploy Canal
+      when: network == "Canal" and kubeadm_init is succeeded
+      shell: |
+        IP_AUTODETECTION_METHOD=interface=eth1
+        IP6_AUTODETECTION_METHOD=interface=eth1 \
+        kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastorecalinetworking/calico.yaml
+
+    - name: Deploy Calico
+      when: network == "Calico" and kubeadm_init is succeeded
+      shell: |
+        kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/rbac.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/canal.yaml
 
 
 - hosts: workers

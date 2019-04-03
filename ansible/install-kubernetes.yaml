@@ -23,10 +23,13 @@
        name: kubeadm={{ k8_version }}-00
        state: present
 
-   - name: install kubeadm
+   - name: install kubernetes-cni
      apt:
        name: kubernetes-cni
        state: present
+
+   - name: initialize the cluster
+     shell: sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip={{ master_private_ip }}~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 - hosts: master
   become: yes
