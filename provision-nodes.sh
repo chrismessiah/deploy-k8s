@@ -8,7 +8,7 @@ NODES=2
 DO_KEYS="24225182,24202611"
 
 rm provision.log
-rm ansible-hosts
+rm ansible.conf
 
 NODE_STRING="" && for (( i = 1; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
 sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
@@ -22,16 +22,20 @@ doctl compute droplet create master $NODE_STRING \
   --enable-private-networking \
   --wait >> provision.log
 
-echo "[masters]" >> ansible-hosts
+echo "[masters]" >> ansible.conf
 
 MASTER_IP=`cat provision.log | grep master | awk '{print $3}'`
-echo "master ansible_host=$MASTER_IP ansible_user=root" >> ansible-hosts
+echo "master ansible_host=$MASTER_IP ansible_user=root" >> ansible.conf
 
-echo "" >> ansible-hosts
+echo "" >> ansible.conf
 
-echo "[workers]" >> ansible-hosts
+echo "[workers]" >> ansible.conf
 
 for (( i = 1; i <= $NODES; i++ )); do
   NODE_IP=`cat provision.log | grep "node$i" | awk '{print $3}'`
-  echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible-hosts
+  echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible.conf
 done
+
+echo "" >> ansible.conf
+echo "[all:vars]" >> ansible.conf
+echo "ansible_python_interpreter=/usr/bin/python3" >> ansible.conf

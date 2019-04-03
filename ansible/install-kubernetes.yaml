@@ -1,0 +1,38 @@
+- hosts: all
+  become: yes
+  tasks:
+   - name: add Kubernetes apt-key
+     apt_key:
+       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+       state: present
+
+   - name: add Kubernetes' APT repository
+     apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      filename: 'kubernetes'
+
+   - name: install kubelet
+     apt:
+       name: kubelet={{ k8_version }}-00
+       state: present
+       update_cache: true
+
+   - name: install kubeadm
+     apt:
+       name: kubeadm={{ k8_version }}-00
+       state: present
+
+   - name: install kubeadm
+     apt:
+       name: kubernetes-cni
+       state: present
+
+- hosts: master
+  become: yes
+  tasks:
+   - name: install kubectl
+     apt:
+       name: kubectl={{ k8_version }}-00
+       state: present
+       force: yes

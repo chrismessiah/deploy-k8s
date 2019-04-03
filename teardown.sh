@@ -2,4 +2,4 @@
 rm ~/.kube/config
 
 doctl compute droplet delete -f master
-doctl compute droplet delete -f node1 node2
+doctl compute droplet delete -f  node1 node2
