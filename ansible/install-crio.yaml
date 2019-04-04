@@ -1,7 +1,5 @@
 - hosts: all
   become: yes
-  vars:
-    crio_version: 1.13
   tasks:
     - name: Add Overlay Linux Module
       modprobe:
