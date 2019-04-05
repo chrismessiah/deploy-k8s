@@ -48,10 +48,8 @@
     - name: Deploy Calico
       when: network == "CALICO" and kubeadm_init is succeeded
       shell: |
-        curl -s -O https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml >> calico.yaml &&\
-        IP_AUTODETECTION_METHOD=interface=eth1 \
-        IP6_AUTODETECTION_METHOD=interface=eth1 \
-        kubectl apply -f calico.yaml
+        IP_AUTODETECTION_METHOD=interface=eth1 IP6_AUTODETECTION_METHOD=interface=eth1 kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
       args:
         chdir: $HOME
         creates: calico.yaml

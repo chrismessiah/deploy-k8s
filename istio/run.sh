@@ -29,3 +29,6 @@ helm template install/kubernetes/helm/istio --name istio --namespace istio-syste
     --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f -
 
 watch -n 2 "kubectl get pods --all-namespaces"
+
+kubectl get svc --all-namespaces | grep istio-ingressgateway
+ISTIO_LB_CLUSTER_IP=`kubectl get svc --all-namespaces | grep istio-ingressgateway | awk '{print $4}'`
