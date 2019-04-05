@@ -9,11 +9,11 @@ NODES=2
 NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
-# K8_VERSION="1.13.5"
-# CRIO_VERSION="1.13"
+K8_VERSION="1.13.5"
+CRIO_VERSION="1.13"
 
-K8_VERSION="1.14.0"
-CRIO_VERSION="1.14"
+# K8_VERSION="1.14.0"
+# CRIO_VERSION="1.14"
 
 # Use "doctl compute ssh-key list" to get this
 # DO_KEYS="23696360"
