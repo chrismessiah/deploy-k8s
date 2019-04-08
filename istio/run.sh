@@ -11,7 +11,8 @@ kubectl create namespace istio-system
 
 # Use helm client to install Istio CRDs
 cd istio
-cd istio-1.1.1
+cd istio-1.1.2
+export PATH=$PWD/bin:$PATH
 helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
 
 # Verify installation, should return 53 or 58

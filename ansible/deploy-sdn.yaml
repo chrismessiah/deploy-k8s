@@ -1,27 +1,31 @@
-- name: Deploy Flannel
-  when: network == "FLANNEL" and kubeadm_init is succeeded
-  shell: kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
+- hosts: master
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Deploy Flannel
+      when: network == "FLANNEL"
+      shell: kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
 
-- name: Deploy Canal
-  when: network == "CANAL" and kubeadm_init is succeeded
-  shell: |
-    kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/rbac.yaml &&\
-    kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+    - name: Deploy Canal
+      when: network == "CANAL"
+      shell: |
+        kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/rbac.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/canal.yaml
 
-- name: Deploy Calico with SDN over PRIVATE IPs
-  when: network == "CALICO" and use_private_ips == "TRUE" and kubeadm_init is succeeded
-  shell: |
-    IP_AUTODETECTION_METHOD=interface=eth1 IP6_AUTODETECTION_METHOD=interface=eth1 kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
-    kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
-  args:
-    chdir: $HOME
-    creates: calico.yaml
+    - name: Deploy Calico with SDN over PRIVATE IPs
+      when: network == "CALICO" and use_private_ips == "TRUE"
+      shell: |
+        IP_AUTODETECTION_METHOD=interface=eth1 IP6_AUTODETECTION_METHOD=interface=eth1 kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
+      args:
+        chdir: $HOME
+        creates: calico.yaml
 
-- name: Deploy Calico with SDN over PUBLIC IPs
-  when: network == "CALICO" and use_private_ips == "FALSE" and kubeadm_init is succeeded
-  shell: |
-    kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
-    kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
-  args:
-    chdir: $HOME
-    creates: calico.yaml
+    - name: Deploy Calico with SDN over PUBLIC IPs
+      when: network == "CALICO" and use_private_ips == "FALSE"
+      shell: |
+        kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
+      args:
+        chdir: $HOME
+        creates: calico.yaml
