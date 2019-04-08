@@ -10,6 +10,10 @@ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | gre
 kubectl run hello-deployment --image=chrismessiah/hello-world --port 3000 --labels='app=hello-world' --replicas=2
 kubectl expose deployment hello-deployment --port=80 --target-port=3000
 
+# revert
+kubectl delete deployment hello-deployment
+kubectl delete svc hello-deployment
+
 # Install Istio without Tiller
 kubectl create namespace istio-system
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.1 sh -

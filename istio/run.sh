@@ -1,6 +1,6 @@
 
 # download istio
-curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.1 sh -
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.2 sh -
 
 ################################################################################
 # See https://istio.io/docs/setup/kubernetes/install/helm/ for more info on the
@@ -28,7 +28,17 @@ helm template install/kubernetes/helm/istio --name istio --namespace istio-syste
 helm template install/kubernetes/helm/istio --name istio --namespace istio-system \
     --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f -
 
+# force istio-proxy sidecar injection in the default namespace
+kubectl label namespace default istio-injection=enabled
+
+# revert to remove label
+# kubectl label namespace default istio-injection-
+
+# wait til ready
 watch -n 2 "kubectl get pods --all-namespaces"
 
+
+
+# Other stuff
 kubectl get svc --all-namespaces | grep istio-ingressgateway
 ISTIO_LB_CLUSTER_IP=`kubectl get svc --all-namespaces | grep istio-ingressgateway | awk '{print $4}'`

@@ -12,8 +12,13 @@ NETWORK='CALICO'
 K8_VERSION="1.13.5"
 CRIO_VERSION="1.13"
 
+# CRI-O v1.14 is not released for Ubuntu yet. Use v1.13 atm.
 # K8_VERSION="1.14.0"
 # CRIO_VERSION="1.14"
+
+# Allow to skip this atm due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
+USE_PRIVATE_IPS="FALSE"
+# USE_PRIVATE_IPS="TRUE"
 
 # Use "doctl compute ssh-key list" to get this
 # DO_KEYS="23696360"
@@ -66,6 +71,7 @@ k8_version=$K8_VERSION
 crio_version=$CRIO_VERSION
 cidr=$CIDR
 network=$NETWORK
+use_private_ips=$USE_PRIVATE_IPS
 EOT
 
 sleep 10

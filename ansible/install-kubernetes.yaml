@@ -23,12 +23,9 @@
        name: kubeadm={{ k8_version }}-00
        state: present
 
-   - name: install kubernetes-cni
-     apt:
-       name: kubernetes-cni
-       state: present
-
+   # Allow to skip using "use_private_ips" due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
    - name: Force Private IPs for all kubelets
+     when: use_private_ips == "TRUE"
      shell: sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip={{ master_private_ip }}~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 - hosts: master
