@@ -2,8 +2,9 @@
 
 ## Prerequisites
 
-* [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* [Helm](https://helm.sh/docs/using_helm/#installing-helm)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [Helm](https://helm.sh/docs/using_helm/#installing-helm)
+- [Ansible](https://www.ansible.com/)
 
 ## Helpful commands
 
@@ -103,5 +104,4 @@ tshark -i cali041b8026940 -Y http
 tshark -i calif48e9637a36 -Y http
 
 curl http://10.244.2.2:3000
-
 ```

@@ -44,7 +44,7 @@ DO_COMPUTE_SIZE="s-2vcpu-4gb"
 # ************************ SCRIPT ************************
 
 rm provision-servers.log
-rm ansible/ansible.conf
+rm ansible/hosts.cfg
 
 NODE_STRING="" && for (( i = 1; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
 sed -i "" "s/^doctl compute droplet delete -f node.*/doctl compute droplet delete -f ${NODE_STRING}/" teardown.sh
@@ -61,24 +61,24 @@ doctl compute droplet create master $NODE_STRING \
 MASTER_PUBLIC_IP=`cat provision-servers.log | grep master | awk '{print $3}'`
 MASTER_PRIVATE_IP=`cat provision-servers.log | grep master | awk '{print $4}'`
 
-cat <<EOT >> ansible/ansible.conf
+cat <<EOT >> ansible/hosts.cfg
 [masters]
 master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
 EOT
 
-echo "" >> ansible/ansible.conf
-echo "[workers]" >> ansible/ansible.conf
+echo "" >> ansible/hosts.cfg
+echo "[workers]" >> ansible/hosts.cfg
 for (( i = 1; i <= $NODES; i++ )); do
   NODE_IP=`cat provision-servers.log | grep "node$i" | awk '{print $3}'`
-  echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible/ansible.conf
+  echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible/hosts.cfg
 done
-echo "" >> ansible/ansible.conf
+echo "" >> ansible/hosts.cfg
 
 if [ "$NETWORK" == "CALICO" ]; then CIDR="192.168.0.0/16";
 elif [ "$NETWORK" == "FLANNEL" ] || [ "$NETWORK" == "CANAL" ]; then CIDR="10.244.0.0/16";
 fi
 
-cat <<EOT >> ansible/ansible.conf
+cat <<EOT >> ansible/hosts.cfg
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
 master_public_ip=$MASTER_PUBLIC_IP

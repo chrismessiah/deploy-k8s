@@ -1,0 +1,4 @@
+- import_playbook: install-docker.yaml
+- import_playbook: install-kubernetes.yaml
+- import_playbook: initalize-cluster.yaml
+- import_playbook: deploy-sdn.yaml

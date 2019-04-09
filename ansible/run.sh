@@ -1,7 +1,11 @@
-ansible-playbook install-docker.yaml -i ansible.conf
-ansible-playbook install-kubernetes.yaml -i ansible.conf
-ansible-playbook initalize-cluster.yaml -i ansible.conf
-ansible-playbook deploy-sdn.yaml -i ansible.conf
+# to run all plays
+ansible-playbook run.yaml -i hosts.cfg
 
+# or run them manually
+ansible-playbook install-docker.yaml -i hosts.cfg
+ansible-playbook install-kubernetes.yaml -i hosts.cfg
+ansible-playbook initalize-cluster.yaml -i hosts.cfg
+ansible-playbook deploy-sdn.yaml -i hosts.cfg
 
-# ansible-playbook install-crio.yaml -i ansible.conf
+# doesn't work yet
+# ansible-playbook install-crio.yaml -i hosts.cfg

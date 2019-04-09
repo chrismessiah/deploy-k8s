@@ -1,3 +1,8 @@
+################################################################################
+# BUG NOTE: There is a bug currently where Istio-proxy sometimes fails to start
+# See https://github.com/istio/istio/issues/9504
+################################################################################
+
 
 # download istio
 curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.2 sh -
