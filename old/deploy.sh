@@ -7,7 +7,14 @@ kubectl apply -f k8-dashboard/User.yaml -f k8-dashboard/ClusterRoleBinding.yaml
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 
 # run sample app and create a ClusterIP service
-kubectl run hello-deployment --image=chrismessiah/hello-world --port 3000 --labels='app=hello-world' --replicas=2
+kubectl run hello-deployment --image=chrismessiah/hello-world --labels='app=hello-world' --replicas=2 --port 3000
+
+# ISTIO NOTE:
+#   Due to bug highlighted in https://github.com/istio/istio/issues/9504#issuecomment-472612138
+#   Istio-proxy fails to start when there is a port mismatch. In this case we need to skip the --port parameter!
+kubectl run hello-deployment --image=chrismessiah/hello-world --labels='app=hello-world' --replicas=2
+
+# Create service
 kubectl expose deployment hello-deployment --port=80 --target-port=3000
 
 # revert
