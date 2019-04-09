@@ -1,0 +1,40 @@
+# The service is not reachable atm for some reason. Isio??
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-svc
+  namespace: default
+  labels:
+    app: hello-world
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  selector:
+    app: hello-world
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-deployment
+  namespace: default
+  labels:
+    app: hello-world
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-world
+  template:
+    metadata:
+      labels:
+        app: hello-world
+    spec:
+      containers:
+      - name: hello-world
+        image: chrismessiah/hello-world:latest
+        # Due to a bug https://github.com/istio/istio/issues/9504 Istio-proxy
+        # start when containerPort is set ...
+        # ports:
+        # - containerPort: 3000
