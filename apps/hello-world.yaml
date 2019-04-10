@@ -1,4 +1,15 @@
-# The service is not reachable atm for some reason. Isio??
+# BUG NOTICE:
+#   Due to a bug https://github.com/istio/istio/issues/9504 Istio-proxy
+#   start when containerPort is set
+# UPDATE ON BUG:
+#   No! Instead verify that Istio's requirements on pods are satisfied:
+#   https://istio.io/docs/setup/kubernetes/prepare/requirements/
+#
+#   In our case each pod must always
+#     * be associated with a Kubernetes Service
+#     * Have both protocol, port and targetPort defined in the Service
+#     * Have containerPort defined in the deployment
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,8 +19,8 @@ metadata:
     app: hello-world
 spec:
   ports:
-    - name: http
-      port: 80
+    - port: 80
+      name: http
       targetPort: 3000
   selector:
     app: hello-world
@@ -34,7 +45,5 @@ spec:
       containers:
       - name: hello-world
         image: chrismessiah/hello-world:latest
-        # Due to a bug https://github.com/istio/istio/issues/9504 Istio-proxy
-        # start when containerPort is set ...
-        # ports:
-        # - containerPort: 3000
+        ports:
+        - containerPort: 3000
