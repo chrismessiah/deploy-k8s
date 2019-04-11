@@ -1,0 +1,25 @@
+- hosts: master
+  become: yes
+  tasks:
+   - name: Create Helm directory
+     file:
+       path: $HOME/kubernetes-helm
+       state: directory
+
+   - name: Download Helm from Github
+     get_url:
+       url: https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
+       dest: $HOME/kubernetes-helm/helm.tar.gz
+
+   - name: Extract archive contents
+     unarchive:
+      src: $HOME/kubernetes-helm/helm.tar.gz
+      dest: $HOME/kubernetes-helm/
+      remote_src: yes
+
+   - name: Copy Helm into /bin
+     copy:
+       src: $HOME/kubernetes-helm/linux-amd64/helm
+       dest: /bin/
+       mode: '770'
+       remote_src: yes
