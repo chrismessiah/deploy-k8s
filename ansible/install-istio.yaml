@@ -24,34 +24,17 @@
      args:
        chdir: $HOME/istio
 
-   - name: Install Istio CRDs
+   - name: Install Istio
      when: get_istio is succeeded
-     shell: helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
-     register: install_istio_crds
+     shell: |
+        helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f - &&\
+        sleep 30 &&\
+        helm template install/kubernetes/helm/istio --name istio --namespace istio-system --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f - &&\
+        sleep 30
+     register: install_istio
      args:
        chdir: $HOME/istio/istio-1.1.2
-
-   - name: Wait for CRDs to be installed...
-     when: install_istio_crds is succeeded
-     shell: sleep 10
-     register: install_istio_crds_sleep
-
-     # Fails for some reason...
-   - name: Install Istio Profile (Demo)
-     when: install_istio_crds_sleep is succeeded
-     shell: helm template install/kubernetes/helm/istio --name istio --namespace istio-system --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f -
-     register: install_istio_profile
-     args:
-       chdir: $HOME/istio/istio-1.1.2
-
-   - name: Wait for Istio Profiles to be installed...
-     when: install_istio_profile is succeeded
-     shell: sleep 30
-     register: install_istio_profile_sleep
 
    - name: Add istio-injection label to default namespace
-     when: install_istio_profile_sleep is succeeded
-     shell: kubectl label namespace default istio-injection=enabled >> namespace-label.log
-     args:
-       chdir: $HOME/istio
-       creates: namespace-label.log
+     when: install_istio is succeeded
+     shell: kubectl label namespace default istio-injection=enabled
