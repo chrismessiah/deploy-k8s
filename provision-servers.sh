@@ -11,8 +11,10 @@ NODES=2
 NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
-# CONTAINER_RUNTIME="DOCKER"
-CONTAINER_RUNTIME="CRI-O"
+# CRI-O is not working as intented. The cluster gets created but keep
+# getting ImageInspectError
+CONTAINER_RUNTIME="DOCKER"
+# CONTAINER_RUNTIME="CRI-O"
 
 # CRI-O v1.14 is not released for Ubuntu yet. Use v1.13 atm.
 K8_VERSION="1.13.5"
