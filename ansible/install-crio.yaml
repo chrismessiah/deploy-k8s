@@ -1,0 +1,46 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Add Overlay Linux Module
+      modprobe:
+        name: overlay
+        state: present
+
+    - name: Add Bridge-netfilter Linux Module
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Configure bridge forwarding
+      shell: |
+        echo "net.bridge.bridge-nf-call-iptables  = 1
+          net.ipv4.ip_forward                 = 1
+          net.bridge.bridge-nf-call-ip6tables = 1" >> 99-kubernetes-cri.conf &&\
+        sysctl --system
+      args:
+        chdir: /etc/sysctl.d/
+        creates: 99-kubernetes-cri.conf
+
+    - name: Add CRI-O's APT repository
+      apt_repository:
+        repo: ppa:projectatomic/ppa
+        state: present
+
+    - name: Install CRI-O
+      apt:
+        name: cri-o-{{ crio_version }}
+        state: present
+        update_cache: true
+
+    - name: Configure CRI-O to use the docker hub registry
+      shell: |
+        echo 'registries=["docker.io"]' >> crio.conf
+      args:
+        chdir: /etc/crio/
+
+    - name: Enable and start CRI-O
+      systemd:
+        name: crio
+        state: started
+        enabled: yes
+        daemon_reload: yes

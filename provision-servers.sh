@@ -11,7 +11,8 @@ NODES=2
 NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
-
+# CONTAINER_RUNTIME="DOCKER"
+CONTAINER_RUNTIME="CRI-O"
 
 # CRI-O v1.14 is not released for Ubuntu yet. Use v1.13 atm.
 K8_VERSION="1.13.5"
@@ -85,6 +86,7 @@ master_public_ip=$MASTER_PUBLIC_IP
 master_private_ip=$MASTER_PRIVATE_IP
 k8_version=$K8_VERSION
 crio_version=$CRIO_VERSION
+container_runtime=$CONTAINER_RUNTIME
 cidr=$CIDR
 network=$NETWORK
 use_private_ips=$USE_PRIVATE_IPS

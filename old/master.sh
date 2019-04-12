@@ -14,7 +14,7 @@ PRIVATE_MASTER_IP=`ifconfig eth1 | grep 'inet ' | cut -d: -f2 | awk '{print $2}'
 # ************ Install container runtime ************
 if [ "$CONTAINER_RUNTIME" == "DOCKER" ]
 then
-  CRI_SOCKET_FULL=""
+  CRI_SOCKET=""
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
   add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
@@ -28,8 +28,7 @@ then
 
 elif [ "$CONTAINER_RUNTIME" == "CRI-O" ]
 then
-  CRI_SOCKET="/var/run/crio/crio.sock"
-  CRI_SOCKET_FULL="--cri-socket=$CRI_SOCKET"
+  CRI_SOCKET="--cri-socket=/var/run/crio/crio.sock"
   modprobe overlay
   modprobe br_netfilter
   cat > /etc/sysctl.d/99-kubernetes-cri.conf <<EOF
@@ -62,18 +61,23 @@ apt-mark hold kubelet kubeadm kubectl
 # ************* master specific *************
 sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip=$PRIVATE_MASTER_IP~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
+if [ "$NETWORK" == "CALICO" ]
+then
+  sed -i "s~ExecStart=/usr/bin/kubelet.*~& --container-runtime=remote --container-runtime-endpoint=/var/run/crio/crio.sock --cgroup-driver=systemd~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+if
+
 systemctl daemon-reload
 systemctl restart kubelet
 
 if [ "$NETWORK" == "CALICO" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 $CRI_SOCKET_FULL --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=192.168.0.0/16 $CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 elif [ "$NETWORK" == "FLANNEL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  $CRI_SOCKET_FULL --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  $CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 elif [ "$NETWORK" == "CANAL" ]
 then
-  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  $CRI_SOCKET_FULL --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
+  kubeadm init --token $TOKEN --apiserver-advertise-address $PUBLIC_MASTER_IP --pod-network-cidr=10.244.0.0/16  $CRI_SOCKET --kubernetes-version=$KUBERNETES_VERSION >> kubeadm.log
 fi
 
 mkdir -p $HOME/.kube && sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config && sudo chown $(id -u):$(id -g) $HOME/.kube/config

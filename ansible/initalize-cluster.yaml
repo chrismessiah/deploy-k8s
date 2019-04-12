@@ -2,10 +2,23 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: initialize the cluster
+    - name: initialize the cluster (Docker)
+      when: container_runtime == "DOCKER"
       shell: |
         kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
                      --pod-network-cidr={{ cidr }} \
+                     --kubernetes-version={{ k8_version }} >> kubeadm-init.log
+      register: kubeadm_init
+      args:
+        chdir: $HOME
+        creates: kubeadm-init.log
+
+    - name: initialize the cluster (CRI-O)
+      when: container_runtime == "CRI-O"
+      shell: |
+        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
+                     --pod-network-cidr={{ cidr }} \
+                     --cri-socket=/var/run/crio/crio.sock \
                      --kubernetes-version={{ k8_version }} >> kubeadm-init.log
       register: kubeadm_init
       args:

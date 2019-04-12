@@ -26,7 +26,17 @@
    # Allow to skip using "use_private_ips" due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
    - name: Force Private IPs for all kubelets
      when: use_private_ips == "TRUE"
-     shell: sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip={{ master_private_ip }}~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+     shell: |
+        sed -i "s~ExecStart=/usr/bin/kubelet.*~& --node-ip={{ master_private_ip }}~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf &&\
+        systemctl daemon-reload &&\
+        systemctl restart kubelet
+
+   - name: Change default container runtime to CRI-O
+     when: container_runtime == "CRI-O"
+     shell: |
+        sed -i "s~ExecStart=/usr/bin/kubelet.*~& --container-runtime=remote --container-runtime-endpoint=/var/run/crio/crio.sock --cgroup-driver=systemd~" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf &&\
+        systemctl daemon-reload &&\
+        systemctl restart kubelet
 
 - hosts: master
   become: yes
