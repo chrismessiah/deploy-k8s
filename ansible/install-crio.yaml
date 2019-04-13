@@ -34,7 +34,7 @@
 
     - name: Configure CRI-O to use the docker hub registry
       shell: |
-        echo 'registries=["docker.io"]' >> crio.conf
+        sed -i '/^\[crio.image\]/a registries=["docker.io"]' crio.conf
       args:
         chdir: /etc/crio/
 

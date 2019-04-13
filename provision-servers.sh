@@ -12,7 +12,8 @@ NETWORK='CALICO'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
 # CRI-O is not working as intented. The cluster gets created but keep
-# getting ImageInspectError
+# Calico SDN fails witht CrashLoopBackOff and Running 0/1. The IPs seem wrong
+# too on some components.
 CONTAINER_RUNTIME="DOCKER"
 # CONTAINER_RUNTIME="CRI-O"
 
