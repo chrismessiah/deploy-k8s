@@ -25,7 +25,7 @@
        chdir: $HOME/istio
 
    - name: Install Istio (Demo profile)
-     when: get_istio is succeeded
+     when: get_istio is succeeded and istio_profile == "DEMO"
      shell: |
         helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f - &&\
         sleep 30 &&\
@@ -35,16 +35,27 @@
      args:
        chdir: $HOME/istio/istio-1.1.2
 
-   # - name: Install Istio (Production profile)
-   #   when: get_istio is succeeded
-   #   shell: |
-   #      helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f - &&\
-   #      sleep 30 &&\
-   #      helm template install/kubernetes/helm/istio --name istio --namespace istio-system | kubectl apply -f - &&\
-   #      sleep 30
-   #   register: install_istio
-   #   args:
-   #     chdir: $HOME/istio/istio-1.1.2
+   - name: Install Istio (Production profile)
+     when: get_istio is succeeded and istio_profile == "PROD"
+     shell: |
+        helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f - &&\
+        sleep 30 &&\
+        helm template install/kubernetes/helm/istio --name istio --namespace istio-system | kubectl apply -f - &&\
+        sleep 30
+     register: install_istio
+     args:
+       chdir: $HOME/istio/istio-1.1.2
+
+   - name: Install Istio (Demo-auth profile)
+     when: get_istio is succeeded and istio_profile == "DEMOAUTH"
+     shell: |
+        helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f - &&\
+        sleep 30 &&\
+        helm template install/kubernetes/helm/istio --name istio --namespace istio-system --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml | kubectl apply -f - &&\
+        sleep 30
+     register: install_istio
+     args:
+       chdir: $HOME/istio/istio-1.1.2
 
    - name: Add istio-injection label to default namespace
      when: install_istio is succeeded

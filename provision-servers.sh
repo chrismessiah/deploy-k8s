@@ -24,6 +24,10 @@ CRIO_VERSION="1.13"
 # K8_VERSION="1.14.0"
 # CRIO_VERSION="1.14"
 
+# ISTIO_PROFILE="PROD"
+ISTIO_PROFILE="DEMO"
+# ISTIO_PROFILE="DEMOAUTH"
+
 
 # Allow to skip this atm due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
 USE_PRIVATE_IPS="FALSE"
@@ -93,6 +97,7 @@ container_runtime=$CONTAINER_RUNTIME
 cidr=$CIDR
 network=$NETWORK
 use_private_ips=$USE_PRIVATE_IPS
+istio_profile=$ISTIO_PROFILE
 EOT
 
 sleep 10
