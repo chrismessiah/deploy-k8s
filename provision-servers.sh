@@ -100,8 +100,6 @@ use_private_ips=$USE_PRIVATE_IPS
 istio_profile=$ISTIO_PROFILE
 EOT
 
-sleep 10
-
 echo "
 SSH command to master is:       ssh root@$MASTER_PUBLIC_IP"
 for (( i = 1; i <= $NODES; i++ )); do

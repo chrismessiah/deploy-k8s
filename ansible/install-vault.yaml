@@ -1,0 +1,39 @@
+- hosts: master
+  become: yes
+  tasks:
+   - name: Install unzip
+     apt:
+       name: unzip
+       state: present
+       update_cache: true
+
+   - name: Create Vault directory
+     file:
+       path: $HOME/hashicorp-vault
+       state: directory
+
+   - name: Download Vault
+     get_url:
+       url: https://releases.hashicorp.com/vault/1.1.1/vault_1.1.1_linux_amd64.zip
+       dest: $HOME/hashicorp-vault/vault.zip
+       mode: '770'
+
+   - name: Extract archive contents
+     unarchive:
+      src: $HOME/hashicorp-vault/vault.zip
+      dest: $HOME/hashicorp-vault/
+      remote_src: yes
+
+   - name: Copy Vault into /bin
+     copy:
+       src: $HOME/hashicorp-vault/vault
+       dest: /bin/
+       mode: '770'
+       remote_src: yes
+
+   - name: Start Vault server (dev mode)
+     shell: |
+        vault server -dev -dev-listen-address=127.0.0.1:8200 -dev-root-token-id=123456 >> start-server.log
+     args:
+       chdir:  $HOME/hashicorp-vault/
+       creates: start-server.log
