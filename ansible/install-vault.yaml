@@ -31,9 +31,64 @@
        mode: '770'
        remote_src: yes
 
-   - name: Start Vault server (dev mode)
+   - name: Create Vault config dir under /etc
+     file:
+       path: /etc/vault.d
+       state: directory
+
+   - name: Add Vault config
+     copy:
+       dest: /etc/vault.d/vault.hcl
+       content: |
+         ui = true
+
+         storage "file" {
+             path    = "root/hashicorp-vault/vault-data"
+         }
+
+         listener "tcp" {
+            address     = "127.0.0.1:8200"
+            tls_disable = 1
+         }
+
+   - name: Add systemd config for Vault (runs vault as root user, not vault)
+     copy:
+      dest: /etc/systemd/system/vault.service
+      content: |
+        [Unit]
+        Description="HashiCorp Vault - A tool for managing secrets"
+        Documentation=https://www.vaultproject.io/docs/
+        Requires=network-online.target
+        After=network-online.target
+        ConditionFileNotEmpty=/etc/vault.d/vault.hcl
+
+        [Service]
+        User=root
+        Group=root
+        ProtectSystem=full
+        ProtectHome=read-only
+        PrivateTmp=yes
+        PrivateDevices=yes
+        SecureBits=keep-caps
+        AmbientCapabilities=CAP_IPC_LOCK
+        Capabilities=CAP_IPC_LOCK+ep
+        CapabilityBoundingSet=CAP_SYSLOG CAP_IPC_LOCK
+        NoNewPrivileges=yes
+        ExecStart=/usr/local/bin/vault server -config=/etc/vault.d/vault.hcl
+        ExecReload=/bin/kill --signal HUP $MAINPID
+        KillMode=process
+        KillSignal=SIGINT
+        Restart=on-failure
+        RestartSec=5
+        TimeoutStopSec=30
+        StartLimitInterval=60
+        StartLimitBurst=3
+        LimitNOFILE=65536
+
+        [Install]
+        WantedBy=multi-user.target
+
+   - name: Start Vault server
      shell: |
-        vault server -dev -dev-listen-address=127.0.0.1:8200 -dev-root-token-id=123456 >> start-server.log
-     args:
-       chdir:  $HOME/hashicorp-vault/
-       creates: start-server.log
+        systemctl enable vault &&\
+        systemctl start vault
