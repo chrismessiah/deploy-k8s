@@ -7,9 +7,27 @@
        state: present
        update_cache: true
 
-   - name: Create Vault directory
+   - name: Create a non-privileged Vault system user
+     user:
+       name: vault
+       system: true
+       home: /etc/vault.d
+       shell: /bin/false
+
+   - name: Create Vault directory for installation
      file:
        path: $HOME/hashicorp-vault
+       state: directory
+
+   - name: Create Vault storage directory under /var/lib/
+     file:
+       path: /var/lib/vault
+       state: directory
+       owner: vault
+
+   - name: Create Vault config dir under /etc/
+     file:
+       path: /etc/vault.d
        state: directory
 
    - name: Download Vault
@@ -27,14 +45,13 @@
    - name: Copy Vault into /bin
      copy:
        src: $HOME/hashicorp-vault/vault
-       dest: /bin/
+       dest: /usr/local/bin/
        mode: '770'
+       owner: vault
        remote_src: yes
 
-   - name: Create Vault config dir under /etc
-     file:
-       path: /etc/vault.d
-       state: directory
+   - name: Allow Vault to use mlock syscall without root
+     shell: setcap cap_ipc_lock=+ep /usr/local/bin/vault
 
    - name: Add Vault config
      copy:
@@ -43,7 +60,7 @@
          ui = true
 
          storage "file" {
-             path    = "root/hashicorp-vault/vault-data"
+             path    = "/var/lib/vault"
          }
 
          listener "tcp" {
@@ -63,8 +80,8 @@
         ConditionFileNotEmpty=/etc/vault.d/vault.hcl
 
         [Service]
-        User=root
-        Group=root
+        User=vault
+        Group=vault
         ProtectSystem=full
         ProtectHome=read-only
         PrivateTmp=yes
@@ -87,6 +104,11 @@
 
         [Install]
         WantedBy=multi-user.target
+
+   - name: Fix permissions
+     shell: |
+        chown --recursive vault:vault /etc/vault.d &&\
+        chmod 640 /etc/vault.d/vault.hcl
 
    - name: Start Vault server
      shell: |
