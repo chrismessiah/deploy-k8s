@@ -2,7 +2,7 @@
 DO_KEYS="24225182,24202611"
 DO_COMPUTE_SIZE="s-2vcpu-4gb"
 
-doctl compute droplet create vault \
+doctl compute droplet create vm1 \
   --ssh-keys $DO_KEYS \
   --region lon1 \
   --image ubuntu-18-04-x64 \
@@ -10,4 +10,6 @@ doctl compute droplet create vault \
   --format ID,Name,PublicIPv4,PrivateIPv4,Status \
   --enable-private-networking \
   --wait
+
+doctl compute droplet delete -f vm1
 ```

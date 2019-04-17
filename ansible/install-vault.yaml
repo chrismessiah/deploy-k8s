@@ -114,3 +114,10 @@
      shell: |
         systemctl enable vault &&\
         systemctl start vault
+
+   - name: Initalize Vault
+     shell: |
+        vault operator init -address http://127.0.0.1:8200/ >> vault-operator-init.log
+     args:
+       chdir: $HOME/hashicorp-vault
+       creates: vault-operator-init.log
