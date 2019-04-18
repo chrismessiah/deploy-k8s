@@ -121,3 +121,6 @@
      args:
        chdir: $HOME/hashicorp-vault
        creates: vault-operator-init.log
+
+   - name: Set vault client dest as env var
+     shell: echo 'VAULT_ADDR="http://127.0.0.1:8200/"' >> /etc/environment

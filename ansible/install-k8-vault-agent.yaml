@@ -1,0 +1,63 @@
+- hosts: master
+  become: yes
+  environment:
+    VAULT_ADDR: http://127.0.0.1:8200/
+  tasks:
+    - name: Send vault-svc-account.yaml to master
+      copy:
+        dest: $HOME/hashicorp-vault/vault-svc-account.yaml
+        content: |
+            apiVersion: rbac.authorization.k8s.io/v1beta1
+            kind: ClusterRoleBinding
+            metadata:
+              name: role-tokenreview-binding
+              namespace: default
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: system:auth-delegator
+            subjects:
+            - kind: ServiceAccount
+              name: vault-auth
+              namespace: default
+
+    - name: Create service account and apply yaml
+      shell: |
+        kubectl create serviceaccount vault-auth &&\
+        kubectl apply --filename vault-svc-account.yaml
+      args:
+        chdir: $HOME/hashicorp-vault/
+
+    - name: Enable Vault key-value store v1
+      shell: vault secrets enable -version=1 kv
+
+    - name: Send policy file to master
+      copy:
+        dest: $HOME/hashicorp-vault/myapp-policy.hcl
+        content: |
+            path "secret/myapp/*" {
+              capabilities = ["read", "list"]
+            }
+
+    - name: Apply policy file
+      shell: vault policy write myapp-policy-name myapp-policy.hcl
+      args:
+        chdir: $HOME/hashicorp-vault/
+
+    - name: Enable key-value store v1
+      shell: vault secrets enable -version=1 kv
+
+    - name: Add some secrets
+      shell: |
+        vault kv put secret/myapp/config \
+          username='app-uname' \
+          password='app-pa33w0r4' \
+          database_url='postgresql://root@localhost:5432/db'
+
+    - name: Add some secrets
+      shell: |
+        vault token create -policy=myapp-policy-namen >> token-create-myapp.log
+
+        vault write auth/userpass/users/test-user \
+          password=vault-pass \
+          policies=myapp-policy-name

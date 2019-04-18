@@ -1,0 +1,28 @@
+- hosts: master
+  become: yes
+  environment:
+    VAULT_ADDR: http://127.0.0.1:8200/
+  tasks:
+   - name: Apply unseal key 1
+     shell: |
+        KEY1=`cat vault-operator-init.log | grep "Key 1" | awk '{print $4}'` &&\
+        vault operator unseal $KEY1 >> unseal-1.log
+     args:
+       chdir: $HOME/hashicorp-vault/
+       creates: unseal-1.log
+
+   - name: Apply unseal key 2
+     shell: |
+        KEY1=`cat vault-operator-init.log | grep "Key 2" | awk '{print $4}'` &&\
+        vault operator unseal $KEY1 >> unseal-2.log
+     args:
+       chdir: $HOME/hashicorp-vault/
+       creates: unseal-2.log
+
+   - name: Apply unseal key 3
+     shell: |
+        KEY1=`cat vault-operator-init.log | grep "Key 3" | awk '{print $4}'` &&\
+        vault operator unseal $KEY1 >> unseal-3.log
+     args:
+       chdir: $HOME/hashicorp-vault/
+       creates: unseal-3.log

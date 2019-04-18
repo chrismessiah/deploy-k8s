@@ -11,6 +11,8 @@ vault operator init
 # https://learn.hashicorp.com/vault/getting-started/deploy#seal-unseal
 vault operator unseal
 
+vault status
+
 # login after vault has been unsealed
 vault login TOKEN
 
