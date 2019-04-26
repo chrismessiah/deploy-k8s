@@ -25,6 +25,16 @@ curl http://localhost:5601 # access kibana UI
 
 # ************** Logstash **************
 mkdir -p /var/lib/logstash/pipeline
+
+# try to add this bellow
+# filter {
+#   if [name] == "docker_containers" {
+#     kv {
+#       remove_char_key => "osquery.result.columns"
+#       prefix => "container."
+#     }
+#   }
+# }
 cat <<EOF > /var/lib/logstash/pipeline/pipeline.conf
 input {
 	tcp {
