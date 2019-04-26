@@ -49,6 +49,50 @@ docker run \
   -p 9600:9600 \
   logstash:7.0.0
 
+# ************** OSQuery **************
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B
+add-apt-repository 'deb [arch=amd64] https://pkg.osquery.io/deb deb main'
+apt-get update
+apt-get install osquery
+
+# for interactive SQL queries (exit with ".exit")
+osqueryi
+
+cat <<EOF > /etc/osquery/osquery.conf
+{
+  "options": {
+    "host_identifier": "hostname",
+    "schedule_splay_percent": 10,
+    "enable_monitor": "true"
+  },
+  "schedule": {
+    "docker_containers": {
+      "query": "SELECT * FROM docker_containers;",
+      "interval": 10
+    },
+    "docker_images": {
+      "query": "SELECT * FROM docker_images;",
+      "interval": 20
+    }
+  },
+  "packs": {
+    "osquery-monitoring": "/usr/share/osquery/packs/osquery-monitoring.conf",
+     "incident-response": "/usr/share/osquery/packs/incident-response.conf",
+     "it-compliance": "/usr/share/osquery/packs/it-compliance.conf",
+     "vuln-management": "/usr/share/osquery/packs/vuln-management.conf"
+  }
+}
+EOF
+
+# to validate the configuration
+osqueryctl config-check
+
+# for interacting with the deamon
+osqueryd -h
+
+# start osquery deamon
+systemctl start osqueryd
+
 # ************** Filebeat **************
 curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.0.0-amd64.deb
 dpkg -i filebeat-7.0.0-amd64.deb
@@ -63,7 +107,11 @@ dpkg -i filebeat-7.0.0-amd64.deb
     #   host: "http://localhost:5601"
 
 filebeat modules enable osquery
-/etc/filebeat/modules.d/osquery.yml
+# Ensure that /etc/filebeat/modules.d/osquery.yml contains the following config
+    # - module: osquery
+    #   result:
+    #     enabled: true
+    #     var.paths: ["/var/log/osquery/osqueryd.results.log*"]
 
-./filebeat setup
-./filebeat -e
+filebeat setup
+service filebeat start
