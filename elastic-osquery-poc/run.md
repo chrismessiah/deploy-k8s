@@ -1,6 +1,13 @@
-docker network create elk-net
 
-# ************** ElasticSearch **************
+# Create Docker network
+
+```sh
+docker network create elk-net
+```
+
+# ElasticSearch
+
+```sh
 docker run \
   -d \
   --network elk-net \
@@ -10,8 +17,11 @@ docker run \
   -p 9300:9300 \
   -e "discovery.type=single-node" \
   elasticsearch:7.0.0
+```
 
-# ************** Kibana **************
+# Kibana
+
+```sh
 docker run \
   -d \
   --network elk-net \
@@ -22,34 +32,32 @@ docker run \
   kibana:7.0.0
 
 curl http://localhost:5601 # access kibana UI
+```
 
-# ************** Logstash **************
+# Logstash
+
+```sh
 mkdir -p /var/lib/logstash/pipeline
+touch /var/lib/logstash/pipeline/pipeline.conf
+```
 
-# try to add this bellow
-# filter {
-#   if [name] == "docker_containers" {
-#     kv {
-#       remove_char_key => "osquery.result.columns"
-#       prefix => "container."
-#     }
-#   }
-# }
-cat <<EOF > /var/lib/logstash/pipeline/pipeline.conf
+```yaml
+# /var/lib/logstash/pipeline/pipeline.conf
 input {
-	tcp {
-		port => 5000
-	}
+  tcp {
+    port => 5000
+  }
 }
 
 output {
-	elasticsearch {
-		hosts => "elasticsearch:9200"
+  elasticsearch {
+    hosts => "elasticsearch:9200"
     index => "logstash-%{+YYYY.MM.dd}"
-	}
+  }
 }
-EOF
+```
 
+```sh
 docker run \
   -d \
   --network elk-net \
@@ -59,17 +67,21 @@ docker run \
   -p 5000:5000 \
   -p 9600:9600 \
   logstash:7.0.0
+```
 
-# ************** OSQuery **************
+# OSQuery
+```sh
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1484120AC4E9F8A1A577AEEE97A80C63C9D8B80B
 add-apt-repository 'deb [arch=amd64] https://pkg.osquery.io/deb deb main'
 apt-get update
 apt-get install osquery
 
-# for interactive SQL queries (exit with ".exit")
-osqueryi
+mkdir -p /etc/osquery
+touch /etc/osquery/osquery.conf
+```
 
-cat <<EOF > /etc/osquery/osquery.conf
+Edit `/etc/osquery/osquery.conf` and add the following
+```json
 {
   "options": {
     "host_identifier": "hostname",
@@ -93,7 +105,11 @@ cat <<EOF > /etc/osquery/osquery.conf
      "vuln-management": "/usr/share/osquery/packs/vuln-management.conf"
   }
 }
-EOF
+```
+
+```sh
+# for interactive SQL queries (exit with ".exit")
+osqueryi
 
 # to validate the configuration
 osqueryctl config-check
@@ -103,27 +119,50 @@ osqueryd -h
 
 # start osquery deamon
 systemctl start osqueryd
+```
 
-# ************** Filebeat **************
+# Filebeat
+
+```sh
 curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.0.0-amd64.deb
 dpkg -i filebeat-7.0.0-amd64.deb
 
-# edit /etc/filebeat/filebeat.yml if config is other than
-    # output.elasticsearch:
-    #   hosts: ["localhost:9200"]
-    #   #index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
-    #   # Optional protocol and basic auth credentials.
-    #   #username: "elastic"
-    #   #password: "<password>"
-    # setup.kibana:
-    #   host: "http://localhost:5601"
+mkdir -p /etc/filebeat
+touch /etc/filebeat/filebeat.yml
+```
 
+edit `/etc/filebeat/filebeat.yml` to set the following configuration
+
+```yaml
+    output.elasticsearch:
+      hosts: ["localhost:9200"]
+      index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+      # Optional protocol and basic auth credentials.
+      #username: "elastic"
+      #password: "<password>"
+    setup.kibana:
+      host: "http://localhost:5601"
+    setup.template:
+  name: osquery
+  pattern: osquery-*
+```
+
+Then
+
+```sh
 filebeat modules enable osquery
-# Ensure that /etc/filebeat/modules.d/osquery.yml contains the following config
-    # - module: osquery
-    #   result:
-    #     enabled: true
-    #     var.paths: ["/var/log/osquery/osqueryd.results.log*"]
+```
 
+Ensure that /etc/filebeat/modules.d/osquery.yml contains the following config
+
+``` yaml
+- module: osquery
+  result:
+    enabled: true
+    var.paths: ["/var/log/osquery/osqueryd.results.log*"]
+```
+
+```sh
 filebeat setup
 service filebeat start
+```
