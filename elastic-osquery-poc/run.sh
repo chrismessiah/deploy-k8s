@@ -45,6 +45,7 @@ input {
 output {
 	elasticsearch {
 		hosts => "elasticsearch:9200"
+    index => "logstash-%{+YYYY.MM.dd}"
 	}
 }
 EOF
@@ -110,6 +111,7 @@ dpkg -i filebeat-7.0.0-amd64.deb
 # edit /etc/filebeat/filebeat.yml if config is other than
     # output.elasticsearch:
     #   hosts: ["localhost:9200"]
+    #   #index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
     #   # Optional protocol and basic auth credentials.
     #   #username: "elastic"
     #   #password: "<password>"
