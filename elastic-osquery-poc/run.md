@@ -134,15 +134,15 @@ touch /etc/filebeat/filebeat.yml
 edit `/etc/filebeat/filebeat.yml` to set the following configuration
 
 ```yaml
-    output.elasticsearch:
-      hosts: ["localhost:9200"]
-      index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
-      # Optional protocol and basic auth credentials.
-      #username: "elastic"
-      #password: "<password>"
-    setup.kibana:
-      host: "http://localhost:5601"
-    setup.template:
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+  index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+  # Optional protocol and basic auth credentials.
+  #username: "elastic"
+  #password: "<password>"
+setup.kibana:
+  host: "http://localhost:5601"
+setup.template:
   name: osquery
   pattern: osquery-*
 ```
