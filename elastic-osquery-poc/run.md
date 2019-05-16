@@ -35,6 +35,7 @@ curl http://localhost:5601 # access kibana UI
 ```
 
 # Logstash
+https://www.elastic.co/guide/en/logstash/current/advanced-pipeline.html
 
 ```sh
 mkdir -p /var/lib/logstash/pipeline
@@ -67,6 +68,26 @@ docker run \
   -p 5000:5000 \
   -p 9600:9600 \
   logstash:7.0.0
+```
+
+```sh
+# Test config
+logstash -f first-pipeline.conf --config.test_and_exit
+
+# hot reload when pipeline-file is edited
+logstash -f first-pipeline.conf --config.reload.automatic
+```
+
+# Curator
+
+```
+apt install python-pip
+pip install elasticsearch-curator
+
+curator --help
+curator action.yaml
+
+curator_cli --help
 ```
 
 # OSQuery
@@ -137,14 +158,22 @@ edit `/etc/filebeat/filebeat.yml` to set the following configuration
 output.elasticsearch:
   hosts: ["localhost:9200"]
   index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
-  # Optional protocol and basic auth credentials.
-  #username: "elastic"
-  #password: "<password>"
 setup.kibana:
   host: "http://localhost:5601"
 setup.template:
   name: osquery
   pattern: osquery-*
+  overwrite: true
+```
+or
+
+```yaml
+filebeat.inputs:
+- type: log
+  paths:
+    - /path/to/file/logstash-tutorial.lo
+output.logstash:
+  hosts: ["localhost:5044"]
 ```
 
 Then

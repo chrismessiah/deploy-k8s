@@ -1,0 +1,6 @@
+actions:
+  1:
+    action: create_index
+    description: "Create index as named"
+    options:
+      name: '<osquery-{now/d}>'
