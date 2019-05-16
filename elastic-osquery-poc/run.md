@@ -53,7 +53,7 @@ input {
 output {
   elasticsearch {
     hosts => "elasticsearch:9200"
-    index => "logstash-%{+YYYY.MM.dd}"
+    index => "foo-%{+YYYY.MM.dd}"
   }
 }
 ```
@@ -157,13 +157,13 @@ edit `/etc/filebeat/filebeat.yml` to set the following configuration
 ```yaml
 output.elasticsearch:
   hosts: ["localhost:9200"]
-  index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
-setup.kibana:
-  host: "http://localhost:5601"
-setup.template:
-  name: osquery
-  pattern: osquery-*
-  overwrite: true
+  index: "bar-%{[agent.version]}-%{+yyyy.MM.dd}"
+setup:
+  ilm.enabled: false # ILM defaults to true in filebeat 7 which overrides index 
+  template:
+    name: bar
+    pattern: bar-*
+    overwrite: true
 ```
 or
 
