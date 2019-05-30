@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-svc
+  labels:
+    app: hello-world
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: hello-world
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-depl
+  labels:
+    app: hello-world
+spec:
+  replicas: 2
+  selector:
+    matchLabels: # Identifiers for pods regarding the deployment, must be identical to template/metadata/labels/ as well
+      app: hello-world
+  template:
+    metadata:
+      name: hello-world
+      labels: # Identifiers for pods regarding the deployment, must be set under spec/selector/matchLabels/ as well
+        app: hello-world
+    spec:
+      # nodeSelector: # labels on nodes. ALL labels in nodeSelector must be satisfied for deployment to node
+      #   kubernetes.io/hostname: node2 # built in label
+      containers:
+      - name: hello-world
+        image: chrismessiah/hello-world:latest # image we pushed
+        ports:
+        - containerPort: 3000

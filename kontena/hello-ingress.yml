@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hello-ingress
+spec:
+  rules:
+  - host: sub.138.68.74.108.nip.io
+    http:
+      paths:
+      - backend:
+          serviceName: hello-world-svc
+          servicePort: 80
