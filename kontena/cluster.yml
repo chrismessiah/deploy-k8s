@@ -1,14 +1,13 @@
+# Ensure that the SSH-key is located at ~/.ssh/id_rsa
 name: pharos-cluster
 hosts:
   - role: master
     address: 138.68.74.108
     user: root
-    ssh_key_path: ~/.ssh/christian
     container_runtime: docker
   - role: worker
     address: 116.203.180.108
     user: root
-    ssh_key_path: ~/.ssh/christian
     container_runtime: docker
 network:
   provider: weave
@@ -34,4 +33,4 @@ addons:
     enabled: true
     schedule: "1 0 * * SUN"
     reboot: true
-    drain: true
+    drain: false
