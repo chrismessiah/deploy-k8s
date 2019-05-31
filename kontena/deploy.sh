@@ -8,8 +8,6 @@ doctl compute droplet create do-host01 \
   --size s-1vcpu-2gb  \
   --wait
 
-PUBLIC_IP_HOST_1=$(doctl compute droplet get $(doctl compute droplet list | grep "do-host01" | cut -d' ' -f1) --format PublicIPv4 --no-header)
-
 # HC_SSH_KEY="christian" # private
 HC_SSH_KEY="821926"
 hcloud server create \
@@ -19,6 +17,7 @@ hcloud server create \
   --image ubuntu-18.04 \
   --ssh-key $HC_SSH_KEY
 
+PUBLIC_IP_HOST_1=$(doctl compute droplet get $(doctl compute droplet list | grep "do-host01" | cut -d' ' -f1) --format PublicIPv4 --no-header)
 PUBLIC_IP_HOST_2=$(hcloud server list -o columns=ipv4 -o noheader)
 
 echo "
@@ -29,6 +28,6 @@ echo "
 "
 
 chpharos auto
-pharos up -f
+pharos up -y
 
-pharos kubeconfig  -n pharos-cluster > ~/.kube/config
+pharos kubeconfig -n pharos-cluster > ~/.kube/config
