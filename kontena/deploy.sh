@@ -1,5 +1,7 @@
 cd provision-kontena-cluster
 
+chpharos auto
+
 doctl compute droplet create do-host01 \
   --ssh-keys 24225182 \
   --region fra1 \
