@@ -29,6 +29,6 @@ echo "
 "
 
 chpharos auto
-pharos up
+pharos up -f
 
 pharos kubeconfig  -n pharos-cluster > ~/.kube/config
