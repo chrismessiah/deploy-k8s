@@ -3,6 +3,19 @@
   environment:
     VAULT_ADDR: http://127.0.0.1:8200/
   tasks:
+    - name: Get root token
+      shell: cat vault-operator-init.log | grep Root | awk '{print $4}'
+      register: root_token_c
+
+    - name: Set root token fact
+      set_fact:
+        root_token: "{{ root_token_c.stdout }}"
+
+    - name: Login as Root to vault
+      shell: vault login -method=token token={{ root_token }} >> login.log
+      args:
+        chdir: $HOME/hashicorp-vault/
+
     - name: Send vault-svc-account.yaml to master
       copy:
         dest: $HOME/hashicorp-vault/vault-svc-account.yaml
@@ -24,14 +37,16 @@
     - name: Create service account and apply yaml
       shell: |
         kubectl create serviceaccount vault-auth &&\
-        kubectl apply --filename vault-svc-account.yaml
+        kubectl apply -f vault-svc-account.yaml >> create-svc-acc.log
       args:
         chdir: $HOME/hashicorp-vault/
 
     - name: Enable Vault key-value store v1
-      shell: vault secrets enable -version=1 kv
+      shell: vault secrets enable -version=1 kv >> enable-kv1.log
+      args:
+        chdir: $HOME/hashicorp-vault/
 
-    - name: Send policy file to master
+    - name: Send read-only policy file to master
       copy:
         dest: $HOME/hashicorp-vault/myapp-policy.hcl
         content: |
@@ -40,19 +55,18 @@
             }
 
     - name: Apply policy file
-      shell: vault policy write myapp-policy-name myapp-policy.hcl
+      shell: vault policy write myapp-policy-name myapp-policy.hcl >> create-policy.log
       args:
         chdir: $HOME/hashicorp-vault/
-
-    - name: Enable key-value store v1
-      shell: vault secrets enable -version=1 kv
 
     - name: Add some secrets
       shell: |
         vault kv put secret/myapp/config \
           username='app-uname' \
           password='app-pa33w0r4' \
-          database_url='postgresql://root@localhost:5432/db'
+          database_url='postgresql://root@localhost:5432/db' >> create-secrets.log
+      args:
+        chdir: $HOME/hashicorp-vault/
 
     - name: Add some secrets
       shell: |
@@ -61,3 +75,8 @@
         vault write auth/userpass/users/test-user \
           password=vault-pass \
           policies=myapp-policy-name
+
+    - name: Logout from Vault
+      file:
+        path: $HOME/.vault-token
+        state: absent

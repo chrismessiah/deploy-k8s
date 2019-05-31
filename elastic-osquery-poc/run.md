@@ -144,6 +144,8 @@ systemctl start osqueryd
 
 # Filebeat
 
+## Installation
+
 ```sh
 curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.0.0-amd64.deb
 dpkg -i filebeat-7.0.0-amd64.deb
@@ -152,20 +154,10 @@ mkdir -p /etc/filebeat
 touch /etc/filebeat/filebeat.yml
 ```
 
-edit `/etc/filebeat/filebeat.yml` to set the following configuration
+then edit `/etc/filebeat/filebeat.yml` to set the Filebeat configuration
 
-```yaml
-output.elasticsearch:
-  hosts: ["localhost:9200"]
-  index: "bar-%{[agent.version]}-%{+yyyy.MM.dd}"
-setup:
-  ilm.enabled: false # ILM defaults to true in filebeat 7 which overrides index 
-  template:
-    name: bar
-    pattern: bar-*
-    overwrite: true
-```
-or
+## Shipping logs to Logstash
+
 
 ```yaml
 filebeat.inputs:
@@ -176,7 +168,21 @@ output.logstash:
   hosts: ["localhost:5044"]
 ```
 
-Then
+## Shipping logs directly to ElasticSearch
+
+```yaml
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+  index: "bar-%{[agent.version]}-%{+yyyy.MM.dd}"
+setup:
+  ilm.enabled: false # ILM defaults to true in Filebeat 7 which overrides index
+  template:
+    name: bar
+    pattern: bar-*
+    overwrite: true
+```
+
+## Enabling Filebeat OSQuery module
 
 ```sh
 filebeat modules enable osquery

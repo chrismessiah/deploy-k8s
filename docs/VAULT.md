@@ -25,6 +25,7 @@ vault operator seal
 vault auth enable kubernetes
 vault auth enable ldap
 vault auth enable cert
+vault auth enable userpass
 
 # create a role in vault for the K8 auth method
 vault write auth/kubernetes/login role=demo jwt=TOKEN???

@@ -13,5 +13,8 @@ ansible-playbook initalize-cluster.yaml -i hosts.cfg
 ansible-playbook deploy-sdn.yaml -i hosts.cfg
 ansible-playbook install-helm.yaml -i hosts.cfg
 ansible-playbook install-istio.yaml -i hosts.cfg
+
 ansible-playbook install-vault.yaml -i hosts.cfg
+ansible-playbook unseal-vault.yaml -i hosts.cfg
+ansible-playbook install-k8-vault-agent.yaml -i hosts.cfg
 ```
