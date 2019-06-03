@@ -1,5 +1,5 @@
 #!/bin/bash
 rm ~/.kube/config
-
-doctl compute droplet delete -f master
-doctl compute droplet delete -f  node1 node2
+hcloud server delete master
+hcloud server delete node1
+hcloud server delete node2
