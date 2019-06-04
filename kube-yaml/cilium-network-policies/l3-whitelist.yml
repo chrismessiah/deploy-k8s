@@ -1,0 +1,15 @@
+# L3:
+#   Only allow ingress traffic to pods with "app: hello-world" originating from
+#   pods with label "app: hello-client"
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "l3-whitelist"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: hello-world
+  ingress:
+  - fromEndpoints:
+      - matchLabels:
+          app: hello-client

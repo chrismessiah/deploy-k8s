@@ -1,0 +1,21 @@
+# L3:
+#   Only allow ingress traffic to pods with "app: hello-world" originating from
+#   pods with label "app: hello-client"
+# L4:
+#   Only allow the L3 rules on port 80 and using the TCP protocol
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "l4-whitelist"
+spec:
+  endpointSelector:
+    matchLabels:
+      app: hello-world
+  ingress:
+  - fromEndpoints:
+      - matchLabels:
+          app: hello-client
+      - toPorts:
+        - ports:
+          - port: "80"
+            protocol: TCP
