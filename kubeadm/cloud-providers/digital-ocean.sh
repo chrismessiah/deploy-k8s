@@ -5,6 +5,7 @@ provision_servers () {
 #!/bin/bash
 rm -f ~/.kube/config
 doctl compute droplet delete -f master ${NODE_STRING}
+doctl compute droplet list
 EOT
 
   chmod +x teardown.sh

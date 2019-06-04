@@ -3,6 +3,7 @@ provision_servers () {
 #!/bin/bash
 rm -f ~/.kube/config
 hcloud server delete master
+hcloud server list
 EOT
 
   chmod +x teardown.sh
