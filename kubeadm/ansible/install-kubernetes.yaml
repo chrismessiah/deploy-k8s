@@ -14,13 +14,13 @@
 
    - name: install kubelet
      apt:
-       name: kubelet={{ k8_version }}-00
+       name: kubelet={{ k8_version_long }}-00
        state: present
        update_cache: true
 
    - name: install kubeadm
      apt:
-       name: kubeadm={{ k8_version }}-00
+       name: kubeadm={{ k8_version_long }}-00
        state: present
 
    # Allow to skip using "use_private_ips" due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
@@ -43,6 +43,6 @@
   tasks:
    - name: install kubectl
      apt:
-       name: kubectl={{ k8_version }}-00
+       name: kubectl={{ k8_version_long }}-00
        state: present
        force: yes

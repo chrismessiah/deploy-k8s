@@ -1,5 +1,5 @@
 echo "Provisioning servers..."
-./provision-servers.sh
+./provision.sh
 cd ansible
 echo "Sleeping..."
 sleep 30

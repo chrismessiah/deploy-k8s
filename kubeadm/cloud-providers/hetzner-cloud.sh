@@ -1,9 +1,11 @@
 provision_servers () {
   cat <<EOT >> teardown.sh
-  #!/bin/bash
-  rm ~/.kube/config
-  hcloud server delete master
+#!/bin/bash
+rm -f ~/.kube/config
+hcloud server delete master
 EOT
+
+  chmod +x teardown.sh
 
   hcloud server create \
     --name master \
@@ -27,8 +29,8 @@ EOT
   MASTER_PUBLIC_IP=`hcloud server list -o noheader | grep master | awk '{print $4}'`
 
   cat <<EOT >> ansible/hosts.cfg
-  [masters]
-  master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
+[masters]
+master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
 EOT
 
   echo "" >> ansible/hosts.cfg
@@ -39,8 +41,8 @@ EOT
   done
   echo "" >> ansible/hosts.cfg
 
-  echo "
-  SSH command to master is:       ssh root@$MASTER_PUBLIC_IP"
+  echo ""
+  echo "SSH command to master is:       ssh root@$MASTER_PUBLIC_IP"
   for (( i = 1; i <= $NODES; i++ )); do
     NODE_IP=`hcloud server list -o noheader | grep "node$i" | awk '{print $4}'`
     echo "SSH command to node$i is:         ssh root@$NODE_IP"

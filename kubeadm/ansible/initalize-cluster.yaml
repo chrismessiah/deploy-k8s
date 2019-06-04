@@ -2,24 +2,45 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: initialize the cluster (Docker)
-      when: container_runtime == "DOCKER"
+    - name: initialize the cluster (Docker) with CIDR
+      when: container_runtime == "DOCKER" and cidr is defined
       shell: |
         kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
                      --pod-network-cidr={{ cidr }} \
-                     --kubernetes-version={{ k8_version }} >> kubeadm-init.log
+                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
+      register: kubeadm_init
+      args:
+        chdir: $HOME
+        creates: kubeadm-init.log
+
+    - name: initialize the cluster (Docker) without CIDR
+      when: container_runtime == "DOCKER" and cidr is not defined
+      shell: |
+        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
+                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
       register: kubeadm_init
       args:
         chdir: $HOME
         creates: kubeadm-init.log
 
     - name: initialize the cluster (CRI-O)
-      when: container_runtime == "CRI-O"
+      when: container_runtime == "CRI-O" and cidr is defined
       shell: |
         kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
                      --pod-network-cidr={{ cidr }} \
                      --cri-socket=/var/run/crio/crio.sock \
-                     --kubernetes-version={{ k8_version }} >> kubeadm-init.log
+                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
+      register: kubeadm_init
+      args:
+        chdir: $HOME
+        creates: kubeadm-init.log
+
+    - name: initialize the cluster (CRI-O)
+      when: container_runtime == "CRI-O" and cidr is not defined
+      shell: |
+        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
+                     --cri-socket=/var/run/crio/crio.sock \
+                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
       register: kubeadm_init
       args:
         chdir: $HOME
