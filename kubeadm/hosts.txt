@@ -1,3 +1,0 @@
-SSH command to master is:        ssh root@104.248.166.74
-SSH command to node1 is:         ssh root@104.248.166.86
-SSH command to node2 is:         ssh root@104.248.174.139
