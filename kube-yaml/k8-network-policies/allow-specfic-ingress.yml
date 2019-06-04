@@ -1,0 +1,16 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-specific-ingress
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: hello-world
+  ingress:
+  - from:
+    - podSelector:
+        color: red
+    to:
+      ports:
+      - port: 80

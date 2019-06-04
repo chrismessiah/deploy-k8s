@@ -34,11 +34,11 @@ EOT
   done
   echo "" >> ansible/hosts.cfg
 
-  echo ""
-  echo "SSH command to master is:       ssh root@$MASTER_PUBLIC_IP"
+  echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
   for (( i = 1; i <= $NODES; i++ )); do
     NODE_IP=`cat provision.log | grep "node$i" | awk '{print $3}'`
-    echo "SSH command to node$i is:         ssh root@$NODE_IP"
+    echo "SSH command to node$i is:         ssh root@$NODE_IP" >> hosts.txt
   done
-  echo ""
+
+  rm provision.log
 }

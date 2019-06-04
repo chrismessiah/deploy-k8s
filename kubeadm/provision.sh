@@ -78,6 +78,7 @@ SSH_KEYS="24225182,24202611"
 # ************************ SCRIPT ************************
 
 rm -f teardown.sh
+rm -f hosts.txt
 rm -f provision.log
 rm -f ansible/hosts.cfg
 

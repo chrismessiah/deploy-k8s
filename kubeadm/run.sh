@@ -12,4 +12,4 @@ if [ "$KERNEL" == "Darwin" ]; then
 	osascript -e 'display notification "Cluster setup complete"'
 fi
 
-watch -n 2 kubectl get pods --all-namespaces
+watch -n 2 kubectl get pods --all-namespaces -o wide
