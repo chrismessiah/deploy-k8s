@@ -3,3 +3,4 @@ provision-servers.log
 istio-*
 *.DS_Store
 kubeadm/teardown.sh
+kubeadm/hosts.txt
