@@ -5,6 +5,7 @@ provision_servers () {
 #!/bin/bash
 rm -f ~/.kube/config
 doctl compute droplet delete -f master ${NODE_STRING}
+sleep 3
 doctl compute droplet list
 EOT
 

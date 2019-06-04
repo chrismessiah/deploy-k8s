@@ -3,7 +3,6 @@ provision_servers () {
 #!/bin/bash
 rm -f ~/.kube/config
 hcloud server delete master
-hcloud server list
 EOT
 
   chmod +x teardown.sh
@@ -26,6 +25,9 @@ EOT
       --image ubuntu-18.04 \
       --ssh-key $SSH_KEYS
   done
+  
+  echo "sleep 3" >> teardown.sh;
+  echo "hcloud server list" >> teardown.sh;
 
   MASTER_PUBLIC_IP=`hcloud server list -o noheader | grep master | awk '{print $4}'`
 
