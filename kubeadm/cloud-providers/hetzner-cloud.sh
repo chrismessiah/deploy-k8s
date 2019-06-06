@@ -1,4 +1,27 @@
 provision_servers () {
+  # ------------------------- Compute -------------------------
+
+  # Note that Istio Pilot requires an extensive amount of resources as mentioned
+  # https://github.com/istio/istio/commit/3530fca7e8799a9ecfb8a8207890620604090a97
+  # https://github.com/istio/istio/issues/7459
+
+  # *** Hetzner Cloud ***
+  COMPUTE_SIZE="cx11" # 1vCPU 2GB RAM, Pilot won't start in this size
+  # COMPUTE_SIZE="cx21" # 2vCPU 4GB RAM
+
+  # ------------------------- SSH keys -------------------------
+
+  # *** Hetzner Cloud ***
+  # SSH_KEYS="christian" # private
+  # SSH_KEYS="821926"
+
+  # Get all available SSH keys
+  SSH_KEYS=`hcloud ssh-key list -o noheader | awk '{print $1}' | tr '\n' ','  | awk '{print substr($1, 1, length($1)-1)}'`
+
+  # ------------------------- Script -------------------------
+
+  echo "Provisioning servers from Hetzner Cloud ..."
+
   cat <<EOT >> teardown.sh
 #!/bin/bash
 rm -f ~/.kube/config
@@ -25,24 +48,24 @@ EOT
       --image ubuntu-18.04 \
       --ssh-key $SSH_KEYS
   done
-  
+
   echo "sleep 3" >> teardown.sh;
   echo "hcloud server list" >> teardown.sh;
 
   MASTER_PUBLIC_IP=`hcloud server list -o noheader | grep master | awk '{print $4}'`
 
-  cat <<EOT >> ansible/hosts.cfg
+  cat <<EOT >> hosts.cfg
 [masters]
 master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
 EOT
 
-  echo "" >> ansible/hosts.cfg
-  echo "[workers]" >> ansible/hosts.cfg
+  echo "" >> hosts.cfg
+  echo "[workers]" >> hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
     NODE_IP=`hcloud server list -o noheader | grep "node$i" | awk '{print $4}'`
-    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible/hosts.cfg
+    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> hosts.cfg
   done
-  echo "" >> ansible/hosts.cfg
+  echo "" >> hosts.cfg
 
   echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
   for (( i = 1; i <= $NODES; i++ )); do
@@ -51,4 +74,7 @@ EOT
   done
 
   rm provision.log
+
+  echo "Waiting for VMs to boot up ..."
+  sleep 60
 }
