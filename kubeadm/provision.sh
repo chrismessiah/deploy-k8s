@@ -32,7 +32,7 @@ EOT
 
 if [ "$NETWORK" == "CALICO" ]; then echo "cidr=192.168.0.0/16" >> hosts.cfg;
 elif [ "$NETWORK" == "FLANNEL" ] || [ "$NETWORK" == "CANAL" ]; then echo "cidr=10.244.0.0/16" >> hosts.cfg;
-elif [ "$NETWORK" == "CILIUM" ]; then echo "No CIDR for Cilium";
+elif [ "$NETWORK" == "CILIUM" ] || [ "$NETWORK" == "WEAVE" ]; then echo "No CIDR mode selected";
 fi
 
 ansible-playbook playbooks/main.yaml -i hosts.cfg
