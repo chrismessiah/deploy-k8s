@@ -9,6 +9,7 @@
 - import_playbook: deploy-sdn.yaml
 
 - import_playbook: install-helm.yaml
+  when: helm is defined and helm == "true"
 
 - import_playbook: install-istio.yaml
   when: istio_profile is defined

@@ -34,9 +34,15 @@ NETWORK='CILIUM'
 # NETWORK='FLANNEL'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 
+# --------- Helm ---------
+
+# Comment out to HELM to not install
+
+# HELM='true'
+
 # --------- Istio ---------
 
-# Comment out to ISTIO_PROFILE to not install istio at all
+# Comment out to ISTIO_PROFILE to not install istio at all, requires helm
 
 # ISTIO_PROFILE="PROD"
 # ISTIO_PROFILE="DEMO"

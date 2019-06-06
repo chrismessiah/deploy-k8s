@@ -26,6 +26,7 @@ network=$NETWORK
 use_private_ips=$USE_PRIVATE_IPS
 EOT
 
+[ ! -z "$HELM" ] && echo "helm=$HELM" >> hosts.cfg
 [ ! -z "$ISTIO_PROFILE" ] && echo "istio_profile=$ISTIO_PROFILE" >> hosts.cfg
 [ ! -z "$CRIO_VERSION" ] && echo "crio_version=$CRIO_VERSION" >> hosts.cfg
 
