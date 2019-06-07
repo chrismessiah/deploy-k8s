@@ -6,8 +6,8 @@ provision_servers () {
   # https://github.com/istio/istio/issues/7459
 
   # *** Hetzner Cloud ***
-  COMPUTE_SIZE="cx11" # 1vCPU 2GB RAM, Pilot won't start in this size
-  # COMPUTE_SIZE="cx21" # 2vCPU 4GB RAM
+  # COMPUTE_SIZE="cx11" # 1vCPU 2GB RAM, Pilot won't start in this size
+  COMPUTE_SIZE="cx21" # 2vCPU 4GB RAM
 
   # ------------------------- SSH keys -------------------------
 

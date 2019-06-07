@@ -8,7 +8,7 @@ There are 2 commands that are relevant
 ```sh
 # find the cilium pod
 CILIUM_MASTER_POD=`kubectl get pods -n kube-system -o wide | grep master | grep cilium | awk '{print $1}'`
-CILIUM_NODE_POD=`kubectl get pods -n kube-system -o wide | grep node1 | grep cilium | grep -v etcd | awk '{print $1}'`
+CILIUM_NODE_POD=`kubectl get pods -n kube-system -o wide | grep node1 | grep cilium | grep -v etcd | grep -v operator | awk '{print $1}'`
 
 # enter cilium pod
 kubectl exec -it --namespace kube-system $CILIUM_MASTER_POD /bin/bash
@@ -68,5 +68,7 @@ cilium policy trace --src-k8s-pod NAMESPACE:SRC_POD --dst-k8s-pod NAMESPACE:DST_
 cilium monitor
 cilium monitor --related-to=ENDPOINT_OR_ID # Filter for only the events related to endpoint
 cilium monitor -t L7 # Filter for only events on layer 7
+
 cilium monitor --type drop # Show notifications only for dropped packet events
+cilium monitor -v --type drop # show verbose logs
 ```
