@@ -1,3 +1,13 @@
+- hosts: all
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Configure bridge packets to be processed by iptables
+      when: network == "WEAVE" or network == "WEAVE_ENC"
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: 1
+
 - hosts: master
   become: yes
   gather_facts: false
@@ -36,6 +46,14 @@
 
     - name: Deploy Weave Net
       when: network == "WEAVE"
+      shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+    - name: Deploy Weave Net (Encrypted Mode)
+      when: network == "WEAVE_ENC"
       shell: |
-        sysctl net.bridge.bridge-nf-call-iptables=1 &&\
-        kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+        mkdir -p /var/lib/weave &&\
+        openssl rand -hex 16 > /var/lib/weave/weave-passwd &&\
+        kubectl create secret -n kube-system generic weave-passwd --from-file=/var/lib/weave/weave-passwd &&\
+        kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&password-secret=weave-passwd"
+      args:
+        creates: /var/lib/weave/weave-passwd

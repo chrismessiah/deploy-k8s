@@ -2,11 +2,11 @@
 name: pharos-cluster
 hosts:
   - role: master
-    address: 138.68.74.108
+    address: 165.22.85.111
     user: root
     container_runtime: docker
   - role: worker
-    address: 116.203.180.108
+    address: 116.203.177.211
     user: root
     container_runtime: docker
 network:
@@ -18,19 +18,19 @@ network:
 addons:
   ingress-nginx:
     enabled: true
-  cert-manager:
-    enabled: true
-    issuer:
-      name: letsencrypt-staging
-      server: https://acme-staging-v02.api.letsencrypt.org/directory
-      email: chrabd@kth.se
-  helm:
-    enabled: true
-    # charts:
-    #   - name: stable/prometheus
-    #     repo: https://kubernetes-charts.storage.googleapis.com/
-  host-upgrades:
-    enabled: true
-    schedule: "1 0 * * SUN"
-    reboot: true
-    drain: false
+  # cert-manager:
+  #   enabled: true
+  #   issuer:
+  #     name: letsencrypt-staging
+  #     server: https://acme-staging-v02.api.letsencrypt.org/directory
+  #     email: chrabd@kth.se
+  # helm:
+  #   enabled: true
+  #   charts:
+  #     - name: stable/prometheus
+  #       repo: https://kubernetes-charts.storage.googleapis.com/
+  # host-upgrades:
+  #   enabled: true
+  #   schedule: "1 0 * * SUN"
+  #   reboot: true
+  #   drain: false
