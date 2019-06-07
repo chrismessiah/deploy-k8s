@@ -29,10 +29,10 @@ CONTAINER_RUNTIME="DOCKER"
 
 # --------- Cluster Networking ---------
 
-# NETWORK='CILIUM'
+NETWORK='CILIUM'
 # NETWORK='CALICO'
 # NETWORK='WEAVE'
-NETWORK='WEAVE_ENC' # WEAVE with encrypted network
+# NETWORK='WEAVE_ENC' # WEAVE with encrypted network
 # NETWORK='FLANNEL'
 # NETWORK='CANAL' # uses FLANNEL overlay with CALICO Network Policies
 

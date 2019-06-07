@@ -10,7 +10,5 @@ spec:
   ingress:
   - from:
     - podSelector:
-        color: red
-    to:
-      ports:
-      - port: 80
+        matchLabels:
+          app: hello-client

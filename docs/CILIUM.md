@@ -8,6 +8,7 @@ There are 2 commands that are relevant
 ```sh
 # find the cilium pod
 CILIUM_MASTER_POD=`kubectl get pods -n kube-system -o wide | grep master | grep cilium | awk '{print $1}'`
+CILIUM_NODE_POD=`kubectl get pods -n kube-system -o wide | grep node1 | grep cilium | grep -v etcd | awk '{print $1}'`
 
 # enter cilium pod
 kubectl exec -it --namespace kube-system $CILIUM_MASTER_POD /bin/bash
@@ -15,7 +16,9 @@ kubectl exec -it --namespace kube-system $CILIUM_MASTER_POD /bin/bash
 # check if Cilium Agent is running
 cilium status
 
+# Monitor both K8 NetworkPolicies and CiliumNetworkPolicies
 cilium monitor
+
 cilium metrics list
 ```
 
