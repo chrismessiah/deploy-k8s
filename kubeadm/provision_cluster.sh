@@ -24,13 +24,16 @@ network=$NETWORK
 EOT
 
 # kubeadm-init.conf
-JSON=`cat kubeadm-config/kubeadm-init.base.json`
+YML=`cat kubeadm-config/kubeadm-init.base.yml`
 
 # Insert element
-echo $JSON | jq '. |= .+ {"foo": "bar"}'
+echo "$YML" | yq '. |= .+ {"foo": "bar"}'
 
 # Update a value
-echo $JSON | jq '.foo = "bar2"'
+echo "$YML" | yq -y '.foo = "bar2"'
+
+# create bootstrap token
+TOKEN=`echo -e "import random,string\ni = string.digits + string.ascii_lowercase\no = ''.join(random.choice(i) for x in range(6))\no += '.'\no += ''.join(random.choice(i) for x in range(16))\nprint o" | python`
 
 [ ! -z "$HELM" ] && echo "helm=$HELM" >> ansible_hosts.cfg
 [ ! -z "$ISTIO_PROFILE" ] && echo "istio_profile=$ISTIO_PROFILE" >> ansible_hosts.cfg

@@ -1,0 +1,11 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: JoinConfiguration
+nodeRegistration:
+  name: "ec2-10-100-0-1"
+  criSocket: "/var/run/dockershim.sock"
+  kubeletExtraArgs:
+    cgroup-driver: "cgroupfs"
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: ${K8S_API_ENDPOINT_INTERNAL} # MASTER_PUBLIC_IP
+    token: "abcdef.0123456789abcdef" # Kubeadm TOKEN
