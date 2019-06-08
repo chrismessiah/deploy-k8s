@@ -44,10 +44,10 @@ EOT
     --size $COMPUTE_SIZE  \
     --format ID,Name,PublicIPv4,PrivateIPv4,Status \
     --enable-private-networking \
-    --wait >> provision_servers.log
+    --wait >> creating_servers.log
 
-  MASTER_PUBLIC_IP=`cat provision_servers.log | grep master | awk '{print $3}'`
-  MASTER_PRIVATE_IP=`cat provision_servers.log | grep master | awk '{print $4}'`
+  MASTER_PUBLIC_IP=`cat creating_servers.log | grep master | awk '{print $3}'`
+  MASTER_PRIVATE_IP=`cat creating_servers.log | grep master | awk '{print $4}'`
 
   cat <<EOT >> ansible_hosts.cfg
 [masters]
@@ -57,18 +57,18 @@ EOT
   echo "" >> ansible_hosts.cfg
   echo "[workers]" >> ansible_hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat provision_servers.log | grep "node$i" | awk '{print $3}'`
+    NODE_IP=`cat creating_servers.log | grep "node$i" | awk '{print $3}'`
     echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible_hosts.cfg
   done
   echo "" >> ansible_hosts.cfg
 
   echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
   for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat provision_servers.log | grep "node$i" | awk '{print $3}'`
+    NODE_IP=`cat creating_servers.log | grep "node$i" | awk '{print $3}'`
     echo "SSH command to node$i is:         ssh root@$NODE_IP" >> hosts.txt
   done
 
-  rm provision_servers.log
+  rm creating_servers.log
 
   echo "Waiting for VMs to boot up ..."
   sleep 30
