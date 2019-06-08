@@ -45,11 +45,13 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
+    - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
+
     - name: update join-config.yml with discovery_token_ca_cert_hash
       shell: |
-        YML=`cat kubeadm-config/kubeadm-init.yml` &&\
-        YML=`echo "YML" | yq 'discovery.bootstrapToken.caCertHashes = [ "{{ discovery_token_ca_cert_hash.stdout }}" ]'` &&\
-        echo "$YML" > kubeadm-config/kubeadm-init.yml
+        YML=`cat ../kubeadm-config/kubeadm-join.yml` &&\
+        YML=`echo "YML" | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'` &&\
+        echo "$YML" > ../kubeadm-config/kubeadm-join.yml
 
 - hosts: workers
   become: yes
