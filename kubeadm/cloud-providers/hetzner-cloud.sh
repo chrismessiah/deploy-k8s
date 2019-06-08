@@ -54,26 +54,24 @@ EOT
 
   MASTER_PUBLIC_IP=`hcloud server list -o noheader | grep master | awk '{print $4}'`
 
-  cat <<EOT >> hosts.cfg
+  cat <<EOT >> ansible_hosts.cfg
 [masters]
 master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
 EOT
 
-  echo "" >> hosts.cfg
-  echo "[workers]" >> hosts.cfg
+  echo "" >> ansible_hosts.cfg
+  echo "[workers]" >> ansible_hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
     NODE_IP=`hcloud server list -o noheader | grep "node$i" | awk '{print $4}'`
-    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> hosts.cfg
+    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible_hosts.cfg
   done
-  echo "" >> hosts.cfg
+  echo "" >> ansible_hosts.cfg
 
   echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
   for (( i = 1; i <= $NODES; i++ )); do
     NODE_IP=`hcloud server list -o noheader | grep "node$i" | awk '{print $4}'`
     echo "SSH command to node$i is:         ssh root@$NODE_IP" >> hosts.txt
   done
-
-  rm provision.log
 
   echo "Waiting for VMs to boot up ..."
   sleep 60

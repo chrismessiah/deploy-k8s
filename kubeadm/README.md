@@ -2,7 +2,7 @@
 
 The repo has the following main files
 
-- `provision-servers.sh`: Provisions VMs on Digital Ocean using `doctl`, generates ansible hosts file `hosts.cfg` with configuration vars and creates `teardown.sh`
+- `provision-servers.sh`: Provisions VMs on Digital Ocean using `doctl`, generates ansible hosts file `ansible_hosts.cfg` with configuration vars and creates `teardown.sh`
 - `ansible/main.yaml`: Main playbook.
 
 ## Prerequisites

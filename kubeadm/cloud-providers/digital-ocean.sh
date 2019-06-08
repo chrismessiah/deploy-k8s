@@ -44,31 +44,31 @@ EOT
     --size $COMPUTE_SIZE  \
     --format ID,Name,PublicIPv4,PrivateIPv4,Status \
     --enable-private-networking \
-    --wait >> provision.log
+    --wait >> provision_servers.log
 
-  MASTER_PUBLIC_IP=`cat provision.log | grep master | awk '{print $3}'`
-  MASTER_PRIVATE_IP=`cat provision.log | grep master | awk '{print $4}'`
+  MASTER_PUBLIC_IP=`cat provision_servers.log | grep master | awk '{print $3}'`
+  MASTER_PRIVATE_IP=`cat provision_servers.log | grep master | awk '{print $4}'`
 
-  cat <<EOT >> hosts.cfg
+  cat <<EOT >> ansible_hosts.cfg
 [masters]
 master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
 EOT
 
-  echo "" >> hosts.cfg
-  echo "[workers]" >> hosts.cfg
+  echo "" >> ansible_hosts.cfg
+  echo "[workers]" >> ansible_hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat provision.log | grep "node$i" | awk '{print $3}'`
-    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> hosts.cfg
+    NODE_IP=`cat provision_servers.log | grep "node$i" | awk '{print $3}'`
+    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible_hosts.cfg
   done
-  echo "" >> hosts.cfg
+  echo "" >> ansible_hosts.cfg
 
   echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
   for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat provision.log | grep "node$i" | awk '{print $3}'`
+    NODE_IP=`cat provision_servers.log | grep "node$i" | awk '{print $3}'`
     echo "SSH command to node$i is:         ssh root@$NODE_IP" >> hosts.txt
   done
 
-  rm provision.log
+  rm provision_servers.log
 
   echo "Waiting for VMs to boot up ..."
   sleep 30
