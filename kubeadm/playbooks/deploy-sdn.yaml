@@ -15,7 +15,7 @@
     - name: Deploy Flannel
       when: network == "FLANNEL"
       shell: kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
-      
+
     - name: Deploy Canal
       when: network == "CANAL"
       shell: |
@@ -25,11 +25,9 @@
     - name: Deploy Calico with SDN over PUBLIC IPs
       when: network == "CALICO"
       shell: |
-        kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
-        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
-      args:
-        chdir: $HOME
-        creates: calico.yaml
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/rbac/rbac-kdd-calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/alp/node.yaml
 
     - name: Deploy Cilium
       when: network == "CILIUM"
