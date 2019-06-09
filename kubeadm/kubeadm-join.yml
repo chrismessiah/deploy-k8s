@@ -1,8 +1,0 @@
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: JoinConfiguration
-discovery:
-  bootstrapToken:
-    apiServerEndpoint: 134.209.187.168:6443
-    token: yomncq.iuvg19dkuprudb3c
-    caCertHashes:
-    - sha256:28b9fef6274ece197e532fcd770fbbd7ca08f06bea8b41a72aef062524d37187
