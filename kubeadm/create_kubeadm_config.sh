@@ -1,17 +1,17 @@
-generate_kubeadm_config () {
+create_kubeadm_config () {
   rm -f kubeadm-config/kubeadm-init.yml
   rm -f kubeadm-config/kubeadm-join.yml
 
   TOKEN=`echo -e "import random,string\ni = string.digits + string.ascii_lowercase\no = ''.join(random.choice(i) for x in range(6))\no += '.'\no += ''.join(random.choice(i) for x in range(16))\nprint o" | python`
 
-  generate_init_config
+  create_init_config
   echo "---" >> kubeadm-config/kubeadm-init.yml
-  generate_cluster_config
+  create_cluster_config
 
-  generate_join_config
+  create_join_config
 }
 
-generate_cluster_config () {
+create_cluster_config () {
   YML=`cat kubeadm-config/base/init-config.yml`
 
   YML=`echo "$YML" | yq -y ".localAPIEndpoint.advertiseAddress = \"$MASTER_PUBLIC_IP\""`
@@ -20,7 +20,7 @@ generate_cluster_config () {
   echo "$YML" >> kubeadm-config/kubeadm-init.yml
 }
 
-generate_init_config () {
+create_init_config () {
   YML=`cat kubeadm-config/base/cluster-config.yml`
 
   YML=`echo "$YML" | yq -y ".controlPlaneEndpoint = \"$MASTER_PUBLIC_IP:6443\""`
@@ -38,10 +38,10 @@ generate_init_config () {
   echo "$YML" >> kubeadm-config/kubeadm-init.yml
 }
 
-generate_join_config () {
+create_join_config () {
   YML=`cat kubeadm-config/base/join-config.yml`
 
-  YML=`echo "$YML" | yq -y ".discovery.bootstrapToken.apiServerEndpoint = \"$MASTER_PUBLIC_IP\""`
+  YML=`echo "$YML" | yq -y ".discovery.bootstrapToken.apiServerEndpoint = \"$MASTER_PUBLIC_IP:6443\""`
   YML=`echo "$YML" | yq -y ".discovery.bootstrapToken.token = \"$TOKEN\""`
 
   echo "$YML" >> kubeadm-config/kubeadm-join.yml

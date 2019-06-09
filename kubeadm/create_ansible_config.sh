@@ -1,4 +1,4 @@
-generate_ansible_config () {
+create_ansible_config () {
   cat <<EOT >> ansible_hosts.cfg
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

@@ -53,5 +53,5 @@ NETWORK='CILIUM'
 # --------- Other ---------
 
 # Allow to skip this atm due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
-USE_PRIVATE_IPS="FALSE"
+# USE_PRIVATE_IPS="FALSE"
 # USE_PRIVATE_IPS="TRUE"

@@ -39,19 +39,17 @@
       shell: kubeadm token create --print-join-command | sed 's/.*--discovery-token-ca-cert-hash //' | awk '{print $1}'
       register: discovery_token_ca_cert_hash
 
-    - debug:
-        var: discovery_token_ca_cert_hash
-
 - hosts: 127.0.0.1
   connection: local
   tasks:
     - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
 
-    - name: update join-config.yml with discovery_token_ca_cert_hash
-      shell: |
-        YML=`cat ../kubeadm-config/kubeadm-join.yml` &&\
-        YML=`echo "YML" | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'` &&\
-        echo "$YML" > ../kubeadm-config/kubeadm-join.yml
+    - name: Read kubeadm-join.yml and add discovery_token_ca_cert_hash
+      shell: cat ../kubeadm-config/kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
+      register: yml
+
+    - name: Write discovery_token_ca_cert_hash updates to kubeadm-join.yml
+      shell: echo "{{ yml.stdout }}" > ../kubeadm-config/kubeadm-join.yml
 
 - hosts: workers
   become: yes
