@@ -15,7 +15,7 @@
     - name: Deploy Flannel
       when: network == "FLANNEL"
       shell: kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --namespace=kube-system
-
+      
     - name: Deploy Canal
       when: network == "CANAL"
       shell: |

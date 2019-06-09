@@ -4,7 +4,7 @@
   tasks:
     - name: send kubeadm init config file to master
       copy:
-        src: ../kubeadm-config/kubeadm-init.yml
+        src: ../kubeadm-init.yml
         dest: ~/kubeadm-init.yml
 
     - name: initialize the cluster with config file
@@ -45,18 +45,18 @@
     - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
 
     - name: Read kubeadm-join.yml and add discovery_token_ca_cert_hash
-      shell: cat ../kubeadm-config/kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
+      shell: cat ../kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
       register: yml
 
     - name: Write discovery_token_ca_cert_hash updates to kubeadm-join.yml
-      shell: echo "{{ yml.stdout }}" > ../kubeadm-config/kubeadm-join.yml
+      shell: echo "{{ yml.stdout }}" > ../kubeadm-join.yml
 
 - hosts: workers
   become: yes
   tasks:
   - name: send kubeadm join config file to master
     copy:
-      src: ../kubeadm-config/kubeadm-join.yml
+      src: ../kubeadm-join.yml
       dest: ~/kubeadm-join.yml
 
   - name: join cluster
