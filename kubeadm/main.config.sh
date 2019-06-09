@@ -15,6 +15,10 @@ K8_VERSION_LONG="1.14.2"
 # K8_VERSION="1.13"
 # K8_VERSION_LONG="1.13.0"
 
+# --------- Admission Controllers ---------
+
+# USE_POD_SEC_POLICY="true"
+
 # --------- Container Runtime ---------
 
 CONTAINER_RUNTIME="DOCKER"

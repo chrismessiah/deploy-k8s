@@ -18,6 +18,10 @@ create_cluster_config () {
   YML=`echo "$YML" | yq -y ".localAPIEndpoint.advertiseAddress = \"$MASTER_PUBLIC_IP\""`
   YML=`echo "$YML" | yq -y ".bootstrapTokens = [{\"token\": \"$TOKEN\",\"description\": \"default kubeadm bootstrap token\"}]"`
 
+  if [ ! -z "$USE_POD_SEC_POLICY" ]; then YML=`echo "$YML" | yq -y '.apiServer = {}' | yq -y '.apiServer.extraArgs = {}' | yq -y '.apiServer.extraArgs.enable-admission-plugins = "PodSecurityPolicy"'`;
+  else YML=`echo "$YML" | yq -y 'del(.apiServer)'`;
+  fi
+
   echo "$YML" >> kubeadm-init.yml
 }
 
