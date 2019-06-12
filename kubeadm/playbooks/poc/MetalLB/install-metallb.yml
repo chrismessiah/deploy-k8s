@@ -1,8 +1,8 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
-   - name: Update configmap.yml with node IPs
-     shell: |
+    - name: Update configmap.yml with node IPs
+      shell: |
         rm -f configmap.yml &&\
         cp configmap-base.yml configmap.yml &&\
         echo "      - {{ master_public_ip }}" >> configmap.yml &&\
@@ -12,21 +12,21 @@
         done
 
 - hosts: master
- become: yes
- tasks:
-  - name: send configmap.yml to master
-    copy:
-      src: configmap.yml
-      dest: ~/metallb-configmap.yml
+  become: yes
+  tasks:
+    - name: send configmap.yml to master
+      copy:
+        src: configmap.yml
+        dest: ~/metallb-configmap.yml
 
-  - name: Install MetalLB
-    shell: kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb.yaml >> metallb.log
-    args:
-      chdir: $HOME
-      creates: metallb.log
+    - name: Install MetalLB
+      shell: kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb.yaml >> metallb.log
+      args:
+        chdir: $HOME
+        creates: metallb.log
 
-   - name: Apply MetalLB configmap
-     shell: kubectl apply -f metallb-configmap.yml >> metallb-configmap.log
-     args:
-       chdir: $HOME
-       creates: metallb-configmap.log
+    - name: Apply MetalLB configmap
+      shell: kubectl apply -f metallb-configmap.yml >> metallb-configmap.log
+      args:
+        chdir: $HOME
+        creates: metallb-configmap.log
