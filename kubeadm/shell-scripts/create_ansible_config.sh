@@ -7,6 +7,7 @@ k8_version=$K8_VERSION
 k8_version_long=$K8_VERSION_LONG
 container_runtime=$CONTAINER_RUNTIME
 network=$NETWORK
+nodes=$NODES
 EOT
 
   [ ! -z "$HELM" ] && echo "helm=$HELM" >> ansible_hosts.cfg

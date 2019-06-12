@@ -1,17 +1,17 @@
 - import_playbook: install-docker.yaml
   when: container_runtime == "DOCKER"
 
-- import_playbook: install-crio.yaml
+- import_playbook: poc/install-crio.yaml
   when: container_runtime == "CRI-O"
 
 - import_playbook: install-kubernetes.yaml
 - import_playbook: initalize-cluster.yaml
 - import_playbook: deploy-sdn.yaml
 
-- import_playbook: install-helm.yaml
+- import_playbook: addons/install-helm.yaml
   when: helm is defined and helm == "true"
 
-- import_playbook: install-istio.yaml
+- import_playbook: addons/install-istio.yaml
   when: istio_profile is defined
 
-# - import_playbook: install-vault.yaml
+# - import_playbook: poc/install-vault.yaml

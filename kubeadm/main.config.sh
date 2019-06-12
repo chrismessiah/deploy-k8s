@@ -10,14 +10,18 @@ CLOUD_PROVIDER="DIGITAL_OCEAN"
 NODES=2
 
 K8_VERSION="1.14"
-K8_VERSION_LONG="1.14.2"
+K8_VERSION_LONG="1.14.3"
 
 # K8_VERSION="1.13"
 # K8_VERSION_LONG="1.13.0"
 
 # --------- Admission Controllers ---------
 
-# USE_POD_SEC_POLICY="true"
+# Remember that many admission controllers are enabled by default.
+# Uncomment to revert back to defaults. ADMISSION_CONTROLLERS is a comma-separa-
+# rated list.
+
+# ADMISSION_CONTROLLERS="PodSecurityPolicy"
 
 # --------- Container Runtime ---------
 

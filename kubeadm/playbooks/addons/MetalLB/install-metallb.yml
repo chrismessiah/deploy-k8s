@@ -1,0 +1,40 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+   - name: Update configmap.yml with master IP
+     shell: cat configmap.yml | yq -y '.data-config.address-pools[1].addresses = ["{{ master_public_ip }}"]' > configmap.yml
+     register: yml
+
+   - name: Update configmap.yml with nodes IPs
+     shell: |
+     for((i=1; i<={{ nodes }}; i+=1));
+      IP=`cat ansible_hosts.cfg | grep worker$i | grep ansible_host | awk '{print $2}' | cut -d "=" -f2`
+      cat configmap.yml | yq ".data-config.address-pools[1].addresses |= . + \"$IP\"" > configmap.yml
+     done
+
+# - hosts: master
+#  become: yes
+#  tasks:
+#   - name: Install MetalLB
+#     shell: kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb.yaml >> metallb.log
+#     args:
+#       chdir: $HOME
+#       creates: metallb.log
+#
+#    - name: Download Helm from Github
+#      get_url:
+#        url: https://storage.googleapis.com/kubernetes-helm/helm-v2.13.1-linux-amd64.tar.gz
+#        dest: $HOME/kubernetes-helm/helm.tar.gz
+#
+#    - name: Extract archive contents
+#      unarchive:
+#       src: $HOME/kubernetes-helm/helm.tar.gz
+#       dest: $HOME/kubernetes-helm/
+#       remote_src: yes
+#
+#    - name: Copy Helm into /bin
+#      copy:
+#        src: $HOME/kubernetes-helm/linux-amd64/helm
+#        dest: /bin/
+#        mode: '770'
+#        remote_src: yes
