@@ -12,20 +12,16 @@ create_kubeadm_config () {
   # echo "---" >> kubeadm-join.yml
 }
 
-create_cluster_config () {
+create_init_config () {
   YML=`cat kubeadm-base-config/init-config.yml`
 
   YML=`echo "$YML" | yq -y ".localAPIEndpoint.advertiseAddress = \"$MASTER_PUBLIC_IP\""`
   YML=`echo "$YML" | yq -y ".bootstrapTokens = [{\"token\": \"$TOKEN\",\"description\": \"default kubeadm bootstrap token\"}]"`
 
-  if [ ! -z "$USE_POD_SEC_POLICY" ]; then YML=`echo "$YML" | yq -y '.apiServer = {}' | yq -y '.apiServer.extraArgs = {}' | yq -y '.apiServer.extraArgs.enable-admission-plugins = "PodSecurityPolicy"'`;
-  else YML=`echo "$YML" | yq -y 'del(.apiServer)'`;
-  fi
-
   echo "$YML" >> kubeadm-init.yml
 }
 
-create_init_config () {
+create_cluster_config() {
   YML=`cat kubeadm-base-config/cluster-config.yml`
 
   YML=`echo "$YML" | yq -y ".controlPlaneEndpoint = \"$MASTER_PUBLIC_IP:6443\""`
@@ -38,6 +34,10 @@ create_init_config () {
 
   if [ ! -z "$CIRD" ]; then YML=`echo "$YML" | yq -y '.networking = {}' | yq -y ".networking.podSubnet = \"$CIRD\""`;
   else YML=`echo "$YML" | yq -y 'del(.networking)'`;
+  fi
+
+  if [ ! -z "$ADMISSION_CONTROLLERS" ]; then YML=`echo "$YML" | yq -y '.apiServer = {}' | yq -y '.apiServer.extraArgs = {}' | yq -y ".apiServer.extraArgs.enable-admission-plugins = \"$ADMISSION_CONTROLLERS\""`;
+  else YML=`echo "$YML" | yq -y 'del(.apiServer)'`;
   fi
 
   echo "$YML" >> kubeadm-init.yml
