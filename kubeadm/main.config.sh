@@ -10,10 +10,18 @@ CLOUD_PROVIDER="DIGITAL_OCEAN"
 NODES=2
 
 K8_VERSION="1.14"
-K8_VERSION_LONG="1.14.2"
+K8_VERSION_LONG="1.14.3"
 
 # K8_VERSION="1.13"
 # K8_VERSION_LONG="1.13.0"
+
+# --------- Admission Controllers ---------
+
+# Remember that many admission controllers are enabled by default.
+# Uncomment to revert back to defaults. ADMISSION_CONTROLLERS is a comma-separa-
+# rated list.
+
+# ADMISSION_CONTROLLERS="PodSecurityPolicy"
 
 # --------- Container Runtime ---------
 
@@ -29,8 +37,8 @@ CONTAINER_RUNTIME="DOCKER"
 
 # --------- Cluster Networking ---------
 
-NETWORK='CILIUM'
-# NETWORK='CALICO'
+# NETWORK='CILIUM'
+NETWORK='CALICO'
 # NETWORK='WEAVE'
 # NETWORK='WEAVE_ENC' # WEAVE with encrypted network
 # NETWORK='FLANNEL'
@@ -53,5 +61,5 @@ NETWORK='CILIUM'
 # --------- Other ---------
 
 # Allow to skip this atm due to K8 error: https://github.com/kubernetes/kubernetes/issues/68270
-USE_PRIVATE_IPS="FALSE"
+# USE_PRIVATE_IPS="FALSE"
 # USE_PRIVATE_IPS="TRUE"

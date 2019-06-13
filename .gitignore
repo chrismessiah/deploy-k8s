@@ -4,3 +4,7 @@ istio-*
 *.DS_Store
 kubeadm/teardown.sh
 kubeadm/hosts.txt
+kubeadm/kubeadm-init.yml
+kubeadm/kubeadm-join.yml
+kubeadm/ansible_hosts.cfg
+kubeadm/playbooks/poc/MetalLB/configmap.yml

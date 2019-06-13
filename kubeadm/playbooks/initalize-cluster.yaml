@@ -2,45 +2,13 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: initialize the cluster (Docker) with CIDR
-      when: container_runtime == "DOCKER" and cidr is defined
-      shell: |
-        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
-                     --pod-network-cidr={{ cidr }} \
-                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
-      register: kubeadm_init
-      args:
-        chdir: $HOME
-        creates: kubeadm-init.log
+    - name: send kubeadm init config file to master
+      copy:
+        src: ../kubeadm-init.yml
+        dest: ~/kubeadm-init.yml
 
-    - name: initialize the cluster (Docker) without CIDR
-      when: container_runtime == "DOCKER" and cidr is not defined
-      shell: |
-        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
-                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
-      register: kubeadm_init
-      args:
-        chdir: $HOME
-        creates: kubeadm-init.log
-
-    - name: initialize the cluster (CRI-O)
-      when: container_runtime == "CRI-O" and cidr is defined
-      shell: |
-        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
-                     --pod-network-cidr={{ cidr }} \
-                     --cri-socket=/var/run/crio/crio.sock \
-                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
-      register: kubeadm_init
-      args:
-        chdir: $HOME
-        creates: kubeadm-init.log
-
-    - name: initialize the cluster (CRI-O)
-      when: container_runtime == "CRI-O" and cidr is not defined
-      shell: |
-        kubeadm init --apiserver-advertise-address {{ master_public_ip }} \
-                     --cri-socket=/var/run/crio/crio.sock \
-                     --kubernetes-version={{ k8_version_long }} >> kubeadm-init.log
+    - name: initialize the cluster with config file
+      shell: kubeadm init --config kubeadm-init.yml >> kubeadm-init.log
       register: kubeadm_init
       args:
         chdir: $HOME
@@ -66,20 +34,33 @@
         dest: ~/.kube/config
         flat: yes
 
-    - name: get join command
+    - name: get --discovery-token-ca-cert-hash from join command
       when: kubeadm_init is succeeded
-      shell: "kubeadm token create --print-join-command"
-      register: join_command_raw
+      shell: kubeadm token create --print-join-command | sed 's/.*--discovery-token-ca-cert-hash //' | awk '{print $1}'
+      register: discovery_token_ca_cert_hash
 
-    - name: set join command
-      set_fact:
-        join_command: "{{ join_command_raw.stdout_lines[0] }}"
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
+
+    - name: Read kubeadm-join.yml and add discovery_token_ca_cert_hash
+      shell: cat ../kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
+      register: yml
+
+    - name: Write discovery_token_ca_cert_hash updates to kubeadm-join.yml
+      shell: echo "{{ yml.stdout }}" > ../kubeadm-join.yml
 
 - hosts: workers
   become: yes
   tasks:
+  - name: send kubeadm join config file to master
+    copy:
+      src: ../kubeadm-join.yml
+      dest: ~/kubeadm-join.yml
+
   - name: join cluster
-    shell: "{{ hostvars['master'].join_command }} >> kubeadm-join.log"
+    shell: kubeadm join --config kubeadm-join.yml >> kubeadm-join.log
     args:
       chdir: $HOME
       creates: kubeadm-join.log

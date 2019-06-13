@@ -22,23 +22,12 @@
         kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/rbac.yaml &&\
         kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/canal/canal.yaml
 
-    - name: Deploy Calico with SDN over PRIVATE IPs
-      when: network == "CALICO" and use_private_ips == "TRUE"
-      shell: |
-        IP_AUTODETECTION_METHOD=interface=eth1 IP6_AUTODETECTION_METHOD=interface=eth1 kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
-        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
-      args:
-        chdir: $HOME
-        creates: calico.yaml
-
     - name: Deploy Calico with SDN over PUBLIC IPs
-      when: network == "CALICO" and use_private_ips == "FALSE"
+      when: network == "CALICO"
       shell: |
-        kubectl apply -f https://docs.projectcalico.org/v3.6/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml &&\
-        kubectl apply -f https://docs.projectcalico.org/v3.6/manifests/rbac-kdd-calico.yaml
-      args:
-        chdir: $HOME
-        creates: calico.yaml
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/rbac/rbac-kdd-calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/alp/node.yaml
 
     - name: Deploy Cilium
       when: network == "CILIUM"

@@ -1,0 +1,38 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Make a fresh copy of configmap.yml
+      shell: |
+        rm -f configmap.yml &&\
+        cp configmap-base.yml configmap.yml
+
+    # - name: Add master IP to configmap.yml
+    #   shell: |
+    #     echo "      - {{ master_public_ip }}" >> configmap.yml
+
+    - name: Add node IPs to configmap.yml
+      shell: |
+        for((i=1; i<={{ nodes }}; i+=1)); do
+          IP=`cat ../../../ansible_hosts.cfg | grep worker$i | grep ansible_host | awk '{print $2}' | cut -d "=" -f2`
+          echo "      - $IP" >> configmap.yml
+        done
+
+- hosts: master
+  become: yes
+  tasks:
+    - name: send configmap.yml to master
+      copy:
+        src: configmap.yml
+        dest: ~/metallb-configmap.yml
+
+    - name: Install MetalLB
+      shell: kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb.yaml >> metallb.log
+      args:
+        chdir: $HOME
+        creates: metallb.log
+
+    - name: Apply MetalLB configmap
+      shell: kubectl apply -f metallb-configmap.yml >> metallb-configmap.log
+      args:
+        chdir: $HOME
+        creates: metallb-configmap.log
