@@ -1,11 +1,17 @@
 - hosts: 127.0.0.1
   connection: local
   tasks:
-    - name: Update configmap.yml with node IPs
+    - name: Make a fresh copy of configmap.yml
       shell: |
         rm -f configmap.yml &&\
-        cp configmap-base.yml configmap.yml &&\
-        echo "      - {{ master_public_ip }}" >> configmap.yml &&\
+        cp configmap-base.yml configmap.yml
+
+    # - name: Add master IP to configmap.yml
+    #   shell: |
+    #     echo "      - {{ master_public_ip }}" >> configmap.yml
+
+    - name: Add node IPs to configmap.yml
+      shell: |
         for((i=1; i<={{ nodes }}; i+=1)); do
           IP=`cat ../../../ansible_hosts.cfg | grep worker$i | grep ansible_host | awk '{print $2}' | cut -d "=" -f2`
           echo "      - $IP" >> configmap.yml
