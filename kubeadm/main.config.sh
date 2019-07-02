@@ -7,6 +7,7 @@ CLOUD_PROVIDER="DIGITAL_OCEAN"
 
 # --------- Kubernetes ---------
 
+MASTERS=2
 NODES=2
 
 # K8_VERSION_LONG="1.13.0"

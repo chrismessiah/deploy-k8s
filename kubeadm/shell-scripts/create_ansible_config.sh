@@ -11,6 +11,7 @@ k8_version=$K8_VERSION
 k8_version_long=$K8_VERSION_LONG
 container_runtime=$CONTAINER_RUNTIME
 network=$NETWORK
+masters=$MASTERS
 nodes=$NODES
 EOT
 

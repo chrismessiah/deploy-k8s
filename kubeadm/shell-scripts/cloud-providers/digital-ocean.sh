@@ -26,47 +26,63 @@ provision_servers () {
 
 
   NODE_STRING="" && for (( i = 1; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
+  MASTER_STRING="" && for (( i = 1; i <= $MASTERS; i++ )); do MASTER_STRING="$MASTER_STRING master$i"; done
 
   cat <<EOT >> teardown.sh
 #!/bin/bash
 rm -f ~/.kube/config
-doctl compute droplet delete -f master ${NODE_STRING}
+doctl compute droplet delete -f ${MASTER_STRING} ${NODE_STRING}
 sleep 3
 doctl compute droplet list
 EOT
 
   chmod +x teardown.sh
 
-  doctl compute droplet create master $NODE_STRING \
+  doctl compute droplet create $MASTER_STRING $NODE_STRING \
     --ssh-keys $SSH_KEYS \
     --region lon1 \
     --image ubuntu-18-04-x64 \
     --size $COMPUTE_SIZE  \
     --format ID,Name,PublicIPv4,PrivateIPv4,Status \
-    --enable-private-networking \
     --wait >> creating_servers.log
 
-  MASTER_PUBLIC_IP=`cat creating_servers.log | grep master | awk '{print $3}'`
-  MASTER_PRIVATE_IP=`cat creating_servers.log | grep master | awk '{print $4}'`
+  echo "[masters]" >> ansible_hosts.cfg
+  for (( i = 1; i <= $MASTERS; i++ )); do
+    MASTER_NAME="master$i"
+    MASTER_PUBLIC_IP=`cat creating_servers.log | grep $MASTER_NAME | awk '{print $3}'`
+    echo "$MASTER_NAME ansible_host=$MASTER_PUBLIC_IP ansible_user=root" >> ansible_hosts.cfg
+    echo "SSH command to $MASTER_NAME is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
+  done
 
-  cat <<EOT >> ansible_hosts.cfg
-[masters]
-master ansible_host=$MASTER_PUBLIC_IP ansible_user=root
-EOT
-
+  echo "" >> hosts.txt
   echo "" >> ansible_hosts.cfg
+
   echo "[workers]" >> ansible_hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat creating_servers.log | grep "node$i" | awk '{print $3}'`
-    echo "worker$i ansible_host=$NODE_IP ansible_user=root" >> ansible_hosts.cfg
+    NODE_NAME="node$i"
+    NODE_IP=`cat creating_servers.log | grep $NODE_NAME | awk '{print $3}'`
+    echo "$NODE_NAME ansible_host=$NODE_IP ansible_user=root" >> ansible_hosts.cfg
+    echo "SSH command to $NODE_NAME is:         ssh root@$NODE_IP" >> hosts.txt
   done
   echo "" >> ansible_hosts.cfg
 
-  echo "SSH command to master is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
-  for (( i = 1; i <= $NODES; i++ )); do
-    NODE_IP=`cat creating_servers.log | grep "node$i" | awk '{print $3}'`
-    echo "SSH command to node$i is:         ssh root@$NODE_IP" >> hosts.txt
-  done
+
+  if (( $MASTERS > 1 )); then
+    doctl compute droplet create k8-lb \
+      --ssh-keys $SSH_KEYS \
+      --region lon1 \
+      --image ubuntu-18-04-x64 \
+      --size $COMPUTE_SIZE  \
+      --format ID,Name,PublicIPv4,PrivateIPv4,Status \
+      --wait >> creating_servers.log
+    LB_IP=`cat creating_servers.log | grep k8-lb | awk '{print $3}'`
+    cat <<EOT >> ansible_hosts.cfg
+
+[loadbalancers]
+loadbalancer ansible_host=$LB_IP ansible_user=root
+EOT
+    echo "SSH command to k8-lb is:         ssh root@$LB_IP" >> hosts.txt
+  fi
 
   rm creating_servers.log
 
