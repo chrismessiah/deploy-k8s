@@ -1,3 +1,7 @@
+
+# shorthand verison, eg. 1.13 or 1.14
+K8_VERSION="$(echo $K8_VERSION_LONG | cut -d'.' -f1 -f2)"
+
 create_ansible_config () {
   cat <<EOT >> ansible_hosts.cfg
 [all:vars]

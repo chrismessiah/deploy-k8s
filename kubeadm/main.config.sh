@@ -9,11 +9,9 @@ CLOUD_PROVIDER="DIGITAL_OCEAN"
 
 NODES=2
 
-K8_VERSION="1.14"
-K8_VERSION_LONG="1.14.3"
-
-# K8_VERSION="1.13"
 # K8_VERSION_LONG="1.13.0"
+# K8_VERSION_LONG="1.14.3"
+K8_VERSION_LONG="1.15.0"
 
 # --------- Admission Controllers ---------
 
