@@ -19,6 +19,18 @@ To get started balancing traffic between our three HTTP listeners, we need to se
 Taken from https://serversforhackers.com/c/load-balancing-with-haproxy
 
 ```
+global
+    user haproxy
+    group haproxy
+
+defaults
+    mode http
+    log global
+    retries 2
+    timeout connect 3000ms
+    timeout server 5000ms
+    timeout client 5000ms
+
 frontend localnodes
     bind *:80
     mode http
@@ -41,6 +53,18 @@ backend nodes
 Adapted from https://medium.com/faun/configuring-ha-kubernetes-cluster-on-bare-metal-servers-with-kubeadm-1-2-1e79f0f7857b
 
 ```
+global
+    user haproxy
+    group haproxy
+
+defaults
+    mode http
+    log global
+    retries 2
+    timeout connect 3000ms
+    timeout server 5000ms
+    timeout client 5000ms
+
 frontend kubernetes
     bind *:80
     mode http
