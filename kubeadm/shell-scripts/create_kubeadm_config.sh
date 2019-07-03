@@ -24,7 +24,13 @@ create_init_config () {
 create_cluster_config() {
   YML=`cat kubeadm-base-config/cluster-config.yml`
 
-  YML=`echo "$YML" | yq -y ".controlPlaneEndpoint = \"$MASTER_PUBLIC_IP:6443\""`
+  if (( $MASTERS > 1 )); then
+    CPE=$LB_IP
+  else
+    CPE=$MASTER_PUBLIC_IP_1
+  fi
+
+  YML=`echo "$YML" | yq -y ".controlPlaneEndpoint = \"$CPE:6443\""`
   YML=`echo "$YML" | yq -y ".kubernetesVersion = \"v$K8_VERSION_LONG\""`
 
   if [ "$NETWORK" == "CALICO" ]; then CIRD="192.168.0.0/16";

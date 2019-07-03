@@ -24,7 +24,6 @@ provision_servers () {
 
   echo "Provisioning servers from Digital Ocean ..."
 
-
   NODE_STRING="" && for (( i = 1; i <= $NODES; i++ )); do NODE_STRING="$NODE_STRING node$i"; done
   MASTER_STRING="" && for (( i = 1; i <= $MASTERS; i++ )); do MASTER_STRING="$MASTER_STRING master$i"; done
 
@@ -32,9 +31,12 @@ provision_servers () {
 #!/bin/bash
 rm -f ~/.kube/config
 doctl compute droplet delete -f ${MASTER_STRING} ${NODE_STRING}
-sleep 3
-doctl compute droplet list
 EOT
+
+if (( $MASTERS > 1 )); then
+  echo "doctl compute droplet delete -f k8-lb" >> teardown.sh
+fi
+echo "sleep 3 && doctl compute droplet list"
 
   chmod +x teardown.sh
 
@@ -59,10 +61,20 @@ EOT
   echo "" >> ansible_hosts.cfg
 
   cat <<EOT >> ansible_hosts.cfg
-[kubectl_host]
+[master_main]
 master1 ansible_host=$MASTER_PUBLIC_IP_1 ansible_user=root
 
 EOT
+
+  if (( $MASTERS > 1 )); then
+    echo "[masters_fallback]" >> ansible_hosts.cfg
+    for (( i = 2; i <= $MASTERS; i++ )); do
+      MASTER_NAME="master$i"
+      IP_VAR_NAME=MASTER_PUBLIC_IP_$i
+      echo "$MASTER_NAME ansible_host=${!IP_VAR_NAME} ansible_user=root" >> ansible_hosts.cfg
+    done
+    echo "" >> ansible_hosts.cfg
+  fi
 
   echo "[workers]" >> ansible_hosts.cfg
   for (( i = 1; i <= $NODES; i++ )); do
@@ -84,9 +96,9 @@ EOT
       --wait >> creating_servers.log
     LB_IP=`cat creating_servers.log | grep k8-lb | awk '{print $3}'`
     cat <<EOT >> ansible_hosts.cfg
-
 [loadbalancers]
 loadbalancer ansible_host=$LB_IP ansible_user=root
+
 EOT
     echo "SSH command to k8-lb is:         ssh root@$LB_IP" >> hosts.txt
   fi

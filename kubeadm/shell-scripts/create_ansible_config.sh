@@ -14,9 +14,6 @@ masters=$MASTERS
 nodes=$NODES
 EOT
 
-
-master_public_ip=$MASTER_PUBLIC_IP
-
   [ ! -z "$LB_IP" ] && echo "loadbalancer_ip=$LB_IP" >> ansible_hosts.cfg
   [ ! -z "$HELM" ] && echo "helm=$HELM" >> ansible_hosts.cfg
   [ ! -z "$ISTIO_PROFILE" ] && echo "istio_profile=$ISTIO_PROFILE" >> ansible_hosts.cfg

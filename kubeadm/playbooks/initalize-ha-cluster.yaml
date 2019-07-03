@@ -1,0 +1,66 @@
+- hosts: kubectl_host
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: send kubeadm init config file to master
+      copy:
+        src: ../kubeadm-init.yml
+        dest: ~/kubeadm-init.yml
+
+    - name: initialize the cluster with config file
+      shell: kubeadm init --config kubeadm-init.yml --upload-certs >> kubeadm-init.log
+      register: kubeadm_init
+      args:
+        chdir: $HOME
+        creates: kubeadm-init.log
+
+    - name: create .kube directory
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to master's kube config
+      when: kubeadm_init is succeeded
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+
+    - name: copy admin.conf to ansible client host's kube config
+      when: kubeadm_init is succeeded
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ~/.kube/config
+        flat: yes
+
+    - name: get --discovery-token-ca-cert-hash from join command
+      when: kubeadm_init is succeeded
+      shell: kubeadm token create --print-join-command | sed 's/.*--discovery-token-ca-cert-hash //' | awk '{print $1}'
+      register: discovery_token_ca_cert_hash
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
+
+    - name: Read kubeadm-join.yml and add discovery_token_ca_cert_hash
+      shell: cat ../kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
+      register: yml
+
+    - name: Write discovery_token_ca_cert_hash updates to kubeadm-join.yml
+      shell: echo "{{ yml.stdout }}" > ../kubeadm-join.yml
+
+- hosts: workers
+  become: yes
+  tasks:
+  - name: send kubeadm join config file to master
+    copy:
+      src: ../kubeadm-join.yml
+      dest: ~/kubeadm-join.yml
+
+  - name: join cluster
+    shell: kubeadm join --config kubeadm-join.yml >> kubeadm-join.log
+    args:
+      chdir: $HOME
+      creates: kubeadm-join.log
