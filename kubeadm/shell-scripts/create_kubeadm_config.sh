@@ -15,7 +15,7 @@ create_kubeadm_config () {
 create_init_config () {
   YML=`cat kubeadm-base-config/init-config.yml`
 
-  YML=`echo "$YML" | yq -y ".localAPIEndpoint.advertiseAddress = \"$MASTER_PUBLIC_IP\""`
+  YML=`echo "$YML" | yq -y ".localAPIEndpoint.advertiseAddress = \"$MASTER_PUBLIC_IP_1\""`
   YML=`echo "$YML" | yq -y ".bootstrapTokens = [{\"token\": \"$TOKEN\",\"description\": \"default kubeadm bootstrap token\"}]"`
 
   echo "$YML" >> kubeadm-init.yml

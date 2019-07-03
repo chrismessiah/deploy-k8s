@@ -36,7 +36,7 @@ EOT
 if (( $MASTERS > 1 )); then
   echo "doctl compute droplet delete -f k8-lb" >> teardown.sh
 fi
-echo "sleep 3 && doctl compute droplet list"
+echo "sleep 3 && doctl compute droplet list" >> teardown.sh
 
   chmod +x teardown.sh
 

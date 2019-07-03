@@ -16,13 +16,20 @@
 - hosts: loadbalancers
   become: yes
   tasks:
-    - name: Copy HAproxy config file
-      copy:
-        src: ../../config/haproxy/haproxy.base.cfg
-        dest: ~/kubeadm-init.yml
-
-    - name: Install haproxy
+    - name: Install HAproxy
       apt:
         name: haproxy
         state: present
         update_cache: true
+        
+    - name: Copy HAproxy config file
+      copy:
+        src: ../../config/haproxy/haproxy.base.cfg
+        dest: /etc/haproxy/haproxy.cfg
+
+    - name: Enable and Start HAproxy
+      systemd:
+        name: haproxy
+        state: started
+        enabled: yes
+        daemon_reload: yes

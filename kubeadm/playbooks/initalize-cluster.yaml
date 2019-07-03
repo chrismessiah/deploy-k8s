@@ -1,4 +1,4 @@
-- hosts: masters
+- hosts: master_main
   become: yes
   gather_facts: false
   tasks:

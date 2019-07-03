@@ -1,8 +1,8 @@
-- hosts: kubectl_host
+- hosts: master_main
   become: yes
   gather_facts: false
   tasks:
-    - name: send kubeadm init config file to master
+    - name: send kubeadm init config file to main master
       copy:
         src: ../kubeadm-init.yml
         dest: ~/kubeadm-init.yml

@@ -19,6 +19,6 @@ provision_servers
 create_ansible_config
 create_kubeadm_config
 
-# ansible-playbook playbooks/main.yaml -i ansible_hosts.cfg
-#
-# iz_complete
+ansible-playbook playbooks/main.yaml -i ansible_hosts.cfg
+
+iz_complete

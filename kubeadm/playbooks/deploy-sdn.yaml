@@ -8,7 +8,7 @@
         name: net.bridge.bridge-nf-call-iptables
         value: 1
 
-- hosts: kubectl_host
+- hosts: master_main
   become: yes
   gather_facts: false
   tasks:
