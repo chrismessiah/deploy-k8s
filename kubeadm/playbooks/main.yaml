@@ -5,6 +5,10 @@
   when: container_runtime == "CRI-O"
 
 - import_playbook: install-kubernetes.yaml
+
+- import_playbook: install-haproxy.yaml
+  when: masters > 1
+
 - import_playbook: initalize-cluster.yaml
 - import_playbook: deploy-sdn.yaml
 

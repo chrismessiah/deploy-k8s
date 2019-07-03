@@ -18,7 +18,7 @@ To get started balancing traffic between our three HTTP listeners, we need to se
 
 Taken from https://serversforhackers.com/c/load-balancing-with-haproxy
 
-```
+```HAProxy
 global
     user haproxy
     group haproxy
@@ -52,7 +52,7 @@ backend nodes
 
 Adapted from https://medium.com/faun/configuring-ha-kubernetes-cluster-on-bare-metal-servers-with-kubeadm-1-2-1e79f0f7857b
 
-```
+```HAProxy
 global
     user haproxy
     group haproxy
@@ -66,14 +66,18 @@ defaults
     timeout client 5000ms
 
 frontend kubernetes
-    bind *:80
-    mode http
-    default_backend nodes
+    mode tcp
+    default_backend k8s-masters
 
-backend nodes
+    # Load balancer's IP
+    bind 134.209.189.11:6443
+
+backend k8s-masters
     mode tcp
     balance roundrobin
     option tcp-check
+
+    # Masters' IPs
     server k8s-master-1 134.209.189.83:6443 check fall 3 rise 2
     server k8s-master-2 134.209.189.16:6443 check fall 3 rise 2
 ```

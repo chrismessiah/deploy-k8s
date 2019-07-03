@@ -17,7 +17,7 @@
           echo "      - $IP" >> configmap.yml
         done
 
-- hosts: master
+- hosts: masters
   become: yes
   tasks:
     - name: send configmap.yml to master
