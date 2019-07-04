@@ -53,7 +53,7 @@ echo "sleep 3 && doctl compute droplet list" >> teardown.sh
     MASTER_NAME="master$i"
     MASTER_PUBLIC_IP=`cat creating_servers.log | grep $MASTER_NAME | awk '{print $3}'`
     echo "$MASTER_NAME ansible_host=$MASTER_PUBLIC_IP ansible_user=root" >> ansible_hosts.cfg
-    echo "SSH command to $MASTER_NAME is:        ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
+    echo "SSH command to $MASTER_NAME is:       ssh root@$MASTER_PUBLIC_IP" >> hosts.txt
     declare MASTER_PUBLIC_IP_$i=$MASTER_PUBLIC_IP
   done
 

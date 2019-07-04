@@ -1,4 +1,4 @@
-iz_complete () {
+alert_notice () {
   KERNEL=$(uname)
   if [ "$KERNEL" == "Darwin" ]; then
   	say $MESSAGE -v Samantha

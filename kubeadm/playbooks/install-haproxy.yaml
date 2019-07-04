@@ -30,6 +30,6 @@
     - name: Enable and Start HAproxy
       systemd:
         name: haproxy
-        state: started
+        state: restarted
         enabled: yes
         daemon_reload: yes

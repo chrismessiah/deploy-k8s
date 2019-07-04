@@ -29,4 +29,6 @@ else
     MESSAGE="Cluster setup failed"
 fi
 
-iz_complete
+alert_notice
+
+watch -n 2 kubectl get pods --all-namespaces -o wide
