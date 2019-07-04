@@ -39,28 +39,32 @@
       shell: kubeadm token create --print-join-command | sed 's/.*--discovery-token-ca-cert-hash //' | awk '{print $1}'
       register: discovery_token_ca_cert_hash
 
-- hosts: 127.0.0.1
-  connection: local
+    - name: get --certificate-key from init log
+      when: kubeadm_init is succeeded
+      shell: cat kubeadm-init.log | grep -- --certificate-key | awk '{print $3}'
+      register: certificate_key
+
+- hosts: masters_fallback
+  become: yes
   tasks:
-    - set_fact: hash={{ hostvars['master'].discovery_token_ca_cert_hash }}
+    - set_fact: cert_hash={{ hostvars['master1'].discovery_token_ca_cert_hash }}
+    - set_fact: cert_key={{ hostvars['master1'].certificate_key }}
+    - set_fact: lb_ip={{ hostvars['loadbalancer'].ansible_host }}
 
-    - name: Read kubeadm-join.yml and add discovery_token_ca_cert_hash
-      shell: cat ../kubeadm-join.yml | yq -y '.discovery.bootstrapToken.caCertHashes = [ "{{ hash.stdout }}" ]'
-      register: yml
-
-    - name: Write discovery_token_ca_cert_hash updates to kubeadm-join.yml
-      shell: echo "{{ yml.stdout }}" > ../kubeadm-join.yml
+    - name: join fallback master to cluster
+      shell: kubeadm join {{ lb_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} --control-plane --certificate-key {{ cert_key.stdout }} >> kubeadm-join-master.log
+      args:
+        chdir: $HOME
+        creates: kubeadm-join-master.log
 
 - hosts: workers
   become: yes
   tasks:
-  - name: send kubeadm join config file to master
-    copy:
-      src: ../kubeadm-join.yml
-      dest: ~/kubeadm-join.yml
+    - set_fact: cert_hash={{ hostvars['master1'].discovery_token_ca_cert_hash }}
+    - set_fact: lb_ip={{ hostvars['master1'].ansible_host }}
 
-  - name: join cluster
-    shell: kubeadm join --config kubeadm-join.yml >> kubeadm-join.log
-    args:
-      chdir: $HOME
-      creates: kubeadm-join.log
+    - name: join worker node to cluster
+      shell: kubeadm join {{ lb_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} >> kubeadm-join.log
+      args:
+        chdir: $HOME
+        creates: kubeadm-join.log

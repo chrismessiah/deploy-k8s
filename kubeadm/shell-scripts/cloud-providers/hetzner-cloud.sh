@@ -70,6 +70,8 @@ master1 ansible_host=$MASTER_PUBLIC_IP_1 ansible_user=root
 
 EOT
 
+MAIN_MASTER=$MASTER_PUBLIC_IP_1
+
 if (( $MASTERS > 1 )); then
   echo "[masters_fallback]" >> ansible_hosts.cfg
   for (( i = 2; i <= $MASTERS; i++ )); do

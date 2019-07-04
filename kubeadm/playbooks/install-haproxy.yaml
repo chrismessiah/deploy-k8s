@@ -11,7 +11,7 @@
 
     - name: Add Masters' IP to haproxy.cfg
       shell: awk '/^backend k8s-masters/{print;print "    server {{ item }} {{ hostvars[item]["ansible_host"] }}:6443 check fall 3 rise 2";next}1' ../../config/haproxy/haproxy.cfg > ../../config/haproxy/haproxy.cfg.tmp && mv ../../config/haproxy/haproxy.cfg.tmp ../../config/haproxy/haproxy.cfg
-      with_items: "{{ groups['masters'] }}"
+      with_items: "{{ groups['masters'] | reverse | list }}"
 
 - hosts: loadbalancers
   become: yes
