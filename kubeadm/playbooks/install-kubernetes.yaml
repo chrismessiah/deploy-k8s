@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: masters:workers
   become: yes
   tasks:
    - name: add Kubernetes apt-key
@@ -23,7 +23,7 @@
        name: kubeadm={{ k8_version_long }}-00
        state: present
 
-- hosts: master
+- hosts: masters
   become: yes
   tasks:
    - name: install kubectl

@@ -1,0 +1,35 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Copy HAproxy config file
+      copy:
+        src: ../../config/haproxy/haproxy.base.cfg
+        dest: ../../config/haproxy/haproxy.cfg
+
+    - name: Add Loadbalancer's IP to haproxy.cfg
+      shell: awk '/^frontend kubernetes/{print;print "    bind {{ loadbalancer_ip }}:6443";next}1' ../../config/haproxy/haproxy.cfg > ../../config/haproxy/haproxy.cfg.tmp && mv ../../config/haproxy/haproxy.cfg.tmp ../../config/haproxy/haproxy.cfg
+
+    - name: Add Masters' IP to haproxy.cfg
+      shell: awk '/^backend k8s-masters/{print;print "    server {{ item }} {{ hostvars[item]["ansible_host"] }}:6443 check fall 3 rise 2";next}1' ../../config/haproxy/haproxy.cfg > ../../config/haproxy/haproxy.cfg.tmp && mv ../../config/haproxy/haproxy.cfg.tmp ../../config/haproxy/haproxy.cfg
+      with_items: "{{ groups['masters'] | reverse | list }}"
+
+- hosts: loadbalancers
+  become: yes
+  tasks:
+    - name: Install HAproxy
+      apt:
+        name: haproxy
+        state: present
+        update_cache: true
+
+    - name: Copy HAproxy config file
+      copy:
+        src: ../../config/haproxy/haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg
+
+    - name: Enable and Start HAproxy
+      systemd:
+        name: haproxy
+        state: restarted
+        enabled: yes
+        daemon_reload: yes

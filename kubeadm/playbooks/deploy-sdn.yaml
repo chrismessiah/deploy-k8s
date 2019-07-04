@@ -8,7 +8,7 @@
         name: net.bridge.bridge-nf-call-iptables
         value: 1
 
-- hosts: master
+- hosts: master_main
   become: yes
   gather_facts: false
   tasks:

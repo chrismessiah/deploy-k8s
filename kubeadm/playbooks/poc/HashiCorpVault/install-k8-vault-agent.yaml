@@ -1,4 +1,4 @@
-- hosts: master
+- hosts: masters
   become: yes
   environment:
     VAULT_ADDR: http://127.0.0.1:8200/

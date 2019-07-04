@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: masters:workers
   become: yes
   tasks:
    - name: add Docker's apt-key

@@ -1,7 +1,9 @@
 # Documentation for kubeadm.k8s.io/v1beta1
 
 - https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file
+
 - https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1
+- https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2
 
 ## Settings used for `kubeadm init`
 
