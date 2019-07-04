@@ -9,11 +9,7 @@
 - import_playbook: install-haproxy.yaml
   when: masters > 1
 
-- import_playbook: initalize-ha-cluster.yaml
-  when: masters > 1
-
 - import_playbook: initalize-cluster.yaml
-  when: masters == 1
 
 - import_playbook: deploy-sdn.yaml
 

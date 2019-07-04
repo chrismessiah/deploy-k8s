@@ -2,13 +2,22 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: send kubeadm init config file to master
+    - name: send kubeadm init config file to main master
       copy:
         src: ../kubeadm-init.yml
         dest: ~/kubeadm-init.yml
 
-    - name: initialize the cluster with config file
+    - name: initialize master (single-master cluster) with config file
       shell: kubeadm init --config kubeadm-init.yml >> kubeadm-init.log
+      when: masters == 1
+      register: kubeadm_init
+      args:
+        chdir: $HOME
+        creates: kubeadm-init.log
+
+    - name: initialize master (HA cluster) with config file
+      shell: kubeadm init --config kubeadm-init.yml --upload-certs >> kubeadm-init.log
+      when: masters > 1
       register: kubeadm_init
       args:
         chdir: $HOME
@@ -39,14 +48,32 @@
       shell: kubeadm token create --print-join-command | sed 's/.*--discovery-token-ca-cert-hash //' | awk '{print $1}'
       register: discovery_token_ca_cert_hash
 
+    - name: get --certificate-key from init log
+      when: kubeadm_init is succeeded and masters > 1
+      shell: cat kubeadm-init.log | grep -- --certificate-key | awk '{print $3}'
+      register: certificate_key
+
+- hosts: masters_fallback
+  become: yes
+  tasks:
+    - set_fact: cert_hash={{ hostvars['master1'].discovery_token_ca_cert_hash }}
+    - set_fact: cert_key={{ hostvars['master1'].certificate_key }}
+    - set_fact: lb_ip={{ hostvars['loadbalancer'].ansible_host }}
+
+    - name: join fallback master to cluster
+      shell: kubeadm join {{ lb_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} --control-plane --certificate-key {{ cert_key.stdout }} >> kubeadm-join-master.log
+      args:
+        chdir: $HOME
+        creates: kubeadm-join-master.log
+
 - hosts: workers
   become: yes
   tasks:
     - set_fact: cert_hash={{ hostvars['master1'].discovery_token_ca_cert_hash }}
-    - set_fact: master_ip={{ hostvars['master1'].ansible_host }}
+    - set_fact: lb_ip={{ hostvars['master1'].ansible_host }}
 
-    - name: join cluster
-      shell: kubeadm join {{ master_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} >> kubeadm-join.log
+    - name: join worker node to cluster
+      shell: kubeadm join {{ lb_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} >> kubeadm-join.log
       args:
         chdir: $HOME
         creates: kubeadm-join.log
