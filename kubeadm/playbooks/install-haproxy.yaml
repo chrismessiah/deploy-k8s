@@ -21,10 +21,10 @@
         name: haproxy
         state: present
         update_cache: true
-        
+
     - name: Copy HAproxy config file
       copy:
-        src: ../../config/haproxy/haproxy.base.cfg
+        src: ../../config/haproxy/haproxy.cfg
         dest: /etc/haproxy/haproxy.cfg
 
     - name: Enable and Start HAproxy
