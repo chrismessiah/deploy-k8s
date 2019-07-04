@@ -7,7 +7,7 @@
         src: ../kubeadm-init.yml
         dest: ~/kubeadm-init.yml
 
-    - name: initialize the cluster with config file
+    - name: initialize master with config file
       shell: kubeadm init --config kubeadm-init.yml --upload-certs >> kubeadm-init.log
       register: kubeadm_init
       args:

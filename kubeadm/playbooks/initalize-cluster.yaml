@@ -46,7 +46,7 @@
     - set_fact: master_ip={{ hostvars['master1'].ansible_host }}
 
     - name: join cluster
-      shell: kubeadm join {{ master_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash }} >> kubeadm-join.log
+      shell: kubeadm join {{ master_ip }}:6443 --token {{ kubeadm_token }} --discovery-token-ca-cert-hash {{ cert_hash.stdout }} >> kubeadm-join.log
       args:
         chdir: $HOME
         creates: kubeadm-join.log
