@@ -3,14 +3,14 @@
   tasks:
     - name: Copy HAproxy config file
       copy:
-        src: ../../config/haproxy/haproxy.base.cfg
-        dest: ../../config/haproxy/haproxy.cfg
+        src: ../haproxy-config/haproxy.base.cfg
+        dest: ../haproxy-config/haproxy.cfg
 
     - name: Add Loadbalancer's IP to haproxy.cfg
-      shell: awk '/^frontend kubernetes/{print;print "    bind {{ loadbalancer_ip }}:6443";next}1' ../../config/haproxy/haproxy.cfg > ../../config/haproxy/haproxy.cfg.tmp && mv ../../config/haproxy/haproxy.cfg.tmp ../../config/haproxy/haproxy.cfg
+      shell: awk '/^frontend kubernetes/{print;print "    bind {{ loadbalancer_ip }}:6443";next}1' ../haproxy-config/haproxy.cfg > ../haproxy-config/haproxy.cfg.tmp && mv ../haproxy-config/haproxy.cfg.tmp ../haproxy-config/haproxy.cfg
 
     - name: Add Masters' IP to haproxy.cfg
-      shell: awk '/^backend k8s-masters/{print;print "    server {{ item }} {{ hostvars[item]["ansible_host"] }}:6443 check fall 3 rise 2";next}1' ../../config/haproxy/haproxy.cfg > ../../config/haproxy/haproxy.cfg.tmp && mv ../../config/haproxy/haproxy.cfg.tmp ../../config/haproxy/haproxy.cfg
+      shell: awk '/^backend k8s-masters/{print;print "    server {{ item }} {{ hostvars[item]["ansible_host"] }}:6443 check fall 3 rise 2";next}1' ../haproxy-config/haproxy.cfg > ../haproxy-config/haproxy.cfg.tmp && mv ../haproxy-config/haproxy.cfg.tmp ../haproxy-config/haproxy.cfg
       with_items: "{{ groups['masters'] | reverse | list }}"
 
 - hosts: loadbalancers
@@ -24,7 +24,7 @@
 
     - name: Copy HAproxy config file
       copy:
-        src: ../../config/haproxy/haproxy.cfg
+        src: ../haproxy-config/haproxy.cfg
         dest: /etc/haproxy/haproxy.cfg
 
     - name: Enable and Start HAproxy

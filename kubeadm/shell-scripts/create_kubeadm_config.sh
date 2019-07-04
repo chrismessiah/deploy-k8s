@@ -8,7 +8,7 @@ create_kubeadm_config () {
 }
 
 create_init_config () {
-  YML=`cat kubeadm-base-config/init-config.yml`
+  YML=`cat kubeadm-config/init-config.yml`
 
   echo $MAIN_MASTER
 
@@ -19,7 +19,7 @@ create_init_config () {
 }
 
 create_cluster_config() {
-  YML=`cat kubeadm-base-config/cluster-config.yml`
+  YML=`cat kubeadm-config/cluster-config.yml`
 
   if (( $MASTERS > 1 )); then
     CPE=$LB_IP

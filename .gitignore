@@ -7,4 +7,5 @@ kubeadm/hosts.txt
 kubeadm/kubeadm-init.yml
 kubeadm/ansible_hosts.cfg
 kubeadm/playbooks/poc/MetalLB/configmap.yml
+kubeadm/haproxy-config/haproxy.cfg
 config/haproxy/haproxy.cfg
