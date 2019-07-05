@@ -27,7 +27,7 @@
         src: ../haproxy-config/haproxy.cfg
         dest: /etc/haproxy/haproxy.cfg
 
-    - name: Enable and Start HAproxy
+    - name: Restart HAproxy
       systemd:
         name: haproxy
         state: restarted
