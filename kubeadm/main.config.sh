@@ -1,18 +1,18 @@
 # ************************ CLOUD PROVIDER CONFIG *******************************
 
-# CLOUD_PROVIDER="DIGITAL_OCEAN"
-CLOUD_PROVIDER="HETZNER_CLOUD"
+CLOUD_PROVIDER="DIGITAL_OCEAN"
+# CLOUD_PROVIDER="HETZNER_CLOUD"
 
 # ****************************** SCRIPT CONFIG *********************************
 
 # --------- Kubernetes ---------
 
-MASTERS=2
+MASTERS=1
 NODES=2
 
 # K8_VERSION_LONG="1.13.0"
 # K8_VERSION_LONG="1.14.3"
-K8_VERSION_LONG="1.15.0"
+K8_VERSION_LONG="1.15.1"
 
 # --------- Admission Controllers ---------
 

@@ -25,9 +25,8 @@
     - name: Deploy Calico with SDN over PUBLIC IPs
       when: network == "CALICO"
       shell: |
-        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/calico.yaml &&\
-        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/rbac/rbac-kdd-calico.yaml &&\
-        kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/alp/node.yaml
+        kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml &&\
+        kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/rbac/rbac-kdd-calico.yaml
 
     - name: Deploy Cilium
       when: network == "CILIUM"
